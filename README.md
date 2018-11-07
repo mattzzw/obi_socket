@@ -8,5 +8,5 @@ However, the objective of this project is about creating a pyhon based software 
 
 The hardware used is a 9€ power socket I bought from a hardware store ('OBI') in Germany. It seems to be a newer revision than the other OBI wifi sockets I found in the interwebs. But the basics are the same: LEDs, a button, a relay and an ESP8266.
 
-More details about how to hack this socket can be found in the wiki.
+More details about how to hack this socket can be found [in the wiki](https://github.com/mattzzw/obi_socket/wiki).
 
