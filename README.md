@@ -16,3 +16,12 @@ But the basics are the same: LEDs, a button, a relay and an ESP8266. Yay.
 
 More details about how to hack this socket can be found [in the wiki](https://github.com/mattzzw/obi_socket/wiki).
 
+## Web API
+
+### GET methods
+
+| URI | Description |
+|-----|-------------|
+| `/switch?pwr=<on/off>` | switch power on/off |
+| `/toggle?pwr=<seconds>` | toggle power for x seconds |
+| `/status` | returns port status as JSON |
