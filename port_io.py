@@ -48,13 +48,15 @@ def board_init():
     on_off = Pin(cfg.inputs[cfg.ON_OFF]['pin'], Pin.IN, Pin.PULL_UP)
     on_off.irq(trigger = Pin.IRQ_FALLING, handler = toggle_on_off)
 
-def toggle_on_off(_):
-    # hack to disable interrupts 
+def toggle_on_off(p):
+    # hack to disable interrupts
     on_off = Pin(cfg.inputs[cfg.ON_OFF]['pin'], Pin.IN, Pin.PULL_UP)
     on_off.irq(trigger = 0, handler = toggle_on_off)
-    print("INFO: Button pressed.")
-    toggle_output(cfg.LED_R)
+    print("INFO: Button pressed:", p)
     toggle_output(cfg.RELAY)
+    s = get_output(cfg.RELAY)
+    set_output(cfg.LED_R, s)
+
     # debounce time
     time.sleep(0.5)
     on_off.irq(trigger = Pin.IRQ_FALLING, handler = toggle_on_off)

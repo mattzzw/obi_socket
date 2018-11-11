@@ -7,7 +7,11 @@ import gc
 import webrepl
 import wifi
 import port_io
+import config as cfg
+
 port_io.board_init()
+
 wifi.do_connect()
+
 webrepl.start()
 gc.collect()

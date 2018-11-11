@@ -34,12 +34,15 @@ def switch(req, resp):
     queryString = req.qs
     parameters = qs_parse(queryString)
     for key, val in parameters.items():
-        if int(key) in cfg.outputs.keys():
-            print("INFO: switching port {} to {}".format(key, val))
-            if val == 'on':
-                port_io.set_output(int(key), 1)
-            elif val == 'off':
-                port_io.set_output(int(key), 0)
+        if key == 'pwr':
+            if val in ('on', 'off'):
+                print("INFO: switching power to {}".format(key, val))
+                if val == 'on':
+                    port_io.set_output(cfg.RELAY, 1)
+                    port_io.set_output(cfg.LED_R, 1)
+                elif val == 'off':
+                    port_io.set_output(cfg.RELAY, 0)
+                    port_io.set_output(cfg.LED_R, 0)
     status = port_io.get_ports_status()
     yield from picoweb.start_response(resp, content_type = "application/json")
     yield from resp.awrite(ujson.dumps(status))
@@ -49,11 +52,13 @@ def toggle(req, resp):
     queryString = req.qs
     parameters = qs_parse(queryString)
     for key, val in parameters.items():
-        if int(key) in cfg.outputs.keys():
-            print("INFO: toggling port {} for {} seconds".format(key, val))
-            port_io.toggle_output(int(key))
+        if key == 'pwr':
+            print("INFO: toggling power for {} seconds".format(key, val))
+            port_io.toggle_output(cfg.RELAY)
+            port_io.toggle_output(cfg.LED_R)
             time.sleep(float(val))
-            port_io.toggle_output(int(key))
+            port_io.toggle_output(cfg.RELAY)
+            port_io.toggle_output(cfg.LED_R)
     status = port_io.get_ports_status()
     yield from picoweb.start_response(resp, content_type = "application/json")
     yield from resp.awrite(ujson.dumps(status))
