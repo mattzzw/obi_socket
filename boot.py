@@ -9,9 +9,7 @@ import wifi
 import port_io
 import config as cfg
 
-port_io.board_init()
-
+port_io.setup_ports()
 wifi.do_connect()
-
 webrepl.start()
 gc.collect()

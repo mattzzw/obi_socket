@@ -23,5 +23,6 @@ More details about how to hack this socket can be found [in the wiki](https://gi
 | URI | Description |
 |-----|-------------|
 | `/switch?pwr=<on/off>` | switch power on/off |
-| `/toggle?pwr=<seconds>` | toggle power for x seconds |
+| `/toggle?pwr=<seconds>` | toggle power for x seconds, use `pwr=0` to toggle only once |
 | `/status` | returns port status as JSON |
+| `/reset` | reset/reboot socket |

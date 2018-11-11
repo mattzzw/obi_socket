@@ -34,7 +34,7 @@ def get_ports_status():
         status[port] = get_output(port)
     return status
 
-def board_init():
+def setup_ports():
     # set output ports
     for port, pcfg in cfg.outputs.items():
         print("INFO: Setting up GPIO {} on pin {}".format(port, pcfg['pin']))
@@ -44,9 +44,13 @@ def board_init():
         else:
             # init low active ports with 1
             pcfg['obj'] = Pin(pcfg['pin'], Pin.OUT, value=1)
-    # setup input port
-    on_off = Pin(cfg.inputs[cfg.ON_OFF]['pin'], Pin.IN, Pin.PULL_UP)
-    on_off.irq(trigger = Pin.IRQ_FALLING, handler = toggle_on_off)
+
+        # setup input port
+        # hack to clean pending interrupts
+        on_off = Pin(cfg.inputs[cfg.ON_OFF]['pin'], Pin.IN, Pin.PULL_UP)
+        on_off.irq(trigger = Pin.IRQ_FALLING, handler = None)
+        time.sleep(0.5)
+        on_off.irq(trigger = Pin.IRQ_FALLING, handler = toggle_on_off)
 
 def toggle_on_off(p):
     # hack to disable interrupts
@@ -56,7 +60,6 @@ def toggle_on_off(p):
     toggle_output(cfg.RELAY)
     s = get_output(cfg.RELAY)
     set_output(cfg.LED_R, s)
-
     # debounce time
     time.sleep(0.5)
     on_off.irq(trigger = Pin.IRQ_FALLING, handler = toggle_on_off)

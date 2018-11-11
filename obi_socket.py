@@ -1,4 +1,4 @@
-from machine import Pin
+import machine
 import picoweb
 import ujson
 import config as cfg
@@ -20,6 +20,12 @@ def qs_parse(qs):
 @app.route('/debug')
 def debug_action(req, resp):
     port_io.toggle_each_port()
+    yield from picoweb.start_response(resp)
+    yield from resp.awrite("Done.")
+
+@app.route('/reset')
+def reset_socket(req, resp):
+    machine.reset()
     yield from picoweb.start_response(resp)
     yield from resp.awrite("Done.")
 
@@ -56,9 +62,10 @@ def toggle(req, resp):
             print("INFO: toggling power for {} seconds".format(key, val))
             port_io.toggle_output(cfg.RELAY)
             port_io.toggle_output(cfg.LED_R)
-            time.sleep(float(val))
-            port_io.toggle_output(cfg.RELAY)
-            port_io.toggle_output(cfg.LED_R)
+            if float(val) > 0:
+                time.sleep(float(val))
+                port_io.toggle_output(cfg.RELAY)
+                port_io.toggle_output(cfg.LED_R)
     status = port_io.get_ports_status()
     yield from picoweb.start_response(resp, content_type = "application/json")
     yield from resp.awrite(ujson.dumps(status))
@@ -68,13 +75,27 @@ def index(req, resp):
     method = req.method
     print("Method was:" + method)
     if method == "POST":
-      yield from picoweb.start_response(resp)
-      yield from resp.awrite("POST method incoming")
+        yield from picoweb.start_response(resp)
+        yield from resp.awrite("POST method incoming")
     else:
-      yield from picoweb.start_response(resp)
-      yield from resp.awrite("Hi, this is {} <br />".format(os.uname()[0]))
-      yield from resp.awrite("Version: {} <br />".format(os.uname()[3]))
-      yield from resp.awrite("{} bytes free".format(gc.mem_free()))
+        import network
+        yield from picoweb.start_response(resp)
+        wlan = network.WLAN(network.STA_IF)
+        yield from resp.awrite("<html><head><style TYPE=\"text/css\">html {font-family: sans-serif;}</style></head><body>")
+        yield from resp.awrite("<h1>Hi, this is {}</h1>".format(os.uname()[0]))
+        yield from resp.awrite("<pre>Wifi interface: {} <br />".format(wlan.ifconfig()))
+        yield from resp.awrite("Firmware version: {} <br />".format(os.uname()[3]))
+        yield from resp.awrite("{} bytes free<br />".format(gc.mem_free()))
+        status = port_io.get_ports_status()
+        yield from resp.awrite("Port status: {}</pre>".format(ujson.dumps(status)))
+        yield from resp.awrite("<hr />Power is")
+        if port_io.get_output(cfg.RELAY) == 1:
+            yield from resp.awrite("<h2>ON</h2>")
+        else:
+            yield from resp.awrite("<h2>OFF</h2>")
+        yield from resp.awrite("<a href=\"/toggle?pwr=0\">Toggle</a>")
+        yield from resp.awrite("</html>")
+
 
 port_io.blink_led()
 app.run(debug=True, port = 80,  host = '0.0.0.0')
