@@ -3,13 +3,27 @@ import port_io
 import utime
 
 def do_connect():
-    if cfg.enable_wifi_client == True:
+    try:
+        f = open("wifi.cfg")
+        p = f.read()
+        s = p.split()
+        ssid = s[0]
+        pw = s[1]
+        f.close()
+        wifi_cfg_exists = True
+    except OSError:
+        wifi_cfg_exists = False
+        ssid = ''
+        pw = ''
+
+    if wifi_cfg_exists == True:
         import network
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
+
         if not wlan.isconnected():
             print('connecting to network...')
-            wlan.connect(cfg.ssid, cfg.pw)
+            wlan.connect(ssid, pw)
             tmo = 0
             while not wlan.isconnected():
                 # try to connect and flash green LED

@@ -106,10 +106,12 @@ def setup(req, resp):
             ssid = req.form['ssid'][0]
             password = req.form['password'][0]
             yield from picoweb.start_response(resp)
-            yield from resp.awrite("POST method incoming!<br />")
-            yield from resp.awrite("parameters: {} {}".format(ssid, password))
-            wifi_config = open("wifi.txt", 'w')
-            wifi_config.write(ssid + '\n')
+            yield from resp.awrite("<html><head><style TYPE=\"text/css\">html {font-family: sans-serif;}</style></head><body>")
+            yield from resp.awrite("Saved config.for SSID {}<br />".format(ssid))
+            yield from resp.awrite("<a href=\"/reset\">Reboot</a> to connect to wifi {}".format(ssid))
+            wifi_config = open("wifi.cfg", 'w')
+            wifi_config.write(ssid)
+            wifi_config.write('\n')
             wifi_config.write(password)
             wifi_config.close()
     else:

@@ -11,8 +11,3 @@ RELAY = 1
 LED_G = 2
 LED_R = 3
 ON_OFF = 1
-
-# Wifi client config
-enable_wifi_client  = True
-ssid                = 'my_ssid'
-pw                  = 'my_password'
