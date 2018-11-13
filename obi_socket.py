@@ -94,7 +94,37 @@ def index(req, resp):
         else:
             yield from resp.awrite("<h2>OFF</h2>")
         yield from resp.awrite("<a href=\"/toggle?pwr=0\">Toggle</a>")
-        yield from resp.awrite("</html>")
+        yield from resp.awrite("</body></html>")
+
+@app.route('/setup')
+def setup(req, resp):
+    method = req.method
+    print("Method was:" + method)
+    if method == "POST":
+        yield from req.read_form_data()
+        if req.form.get('ssid'):
+            ssid = req.form['ssid'][0]
+            password = req.form['password'][0]
+            yield from picoweb.start_response(resp)
+            yield from resp.awrite("POST method incoming!<br />")
+            yield from resp.awrite("parameters: {} {}".format(ssid, password))
+            wifi_config = open("wifi.txt", 'w')
+            wifi_config.write(ssid + '\n')
+            wifi_config.write(password)
+            wifi_config.close()
+    else:
+        yield from picoweb.start_response(resp)
+        yield from resp.awrite("<html><head><style TYPE=\"text/css\">html {font-family: sans-serif;}</style></head><body>")
+        yield from resp.awrite("""
+<form id=\"wifi_config\" method=\"post\">
+SSID:
+ <input name=\"ssid\" type=\"text\" >
+ Password:
+ <input name=\"password\" type=\"password\">
+ <input type=\"submit\" value=\"Save\">
+</form>
+""")
+        yield from resp.awrite("</body></html>")
 
 
 port_io.blink_led()
