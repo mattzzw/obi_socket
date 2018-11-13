@@ -88,12 +88,13 @@ def index(req, resp):
         yield from resp.awrite("{} bytes free<br />".format(gc.mem_free()))
         status = port_io.get_ports_status()
         yield from resp.awrite("Port status: {}</pre>".format(ujson.dumps(status)))
+        yield from resp.awrite("<a href=\"/setup\">Wifi Setup</a>")
         yield from resp.awrite("<hr />Power is")
         if port_io.get_output(cfg.RELAY) == 1:
             yield from resp.awrite("<h2>ON</h2>")
         else:
             yield from resp.awrite("<h2>OFF</h2>")
-        yield from resp.awrite("<a href=\"/toggle?pwr=0\">Toggle</a>")
+        yield from resp.awrite("<a href=\"/toggle?pwr=0\">Toggle</a><br />")
         yield from resp.awrite("</body></html>")
 
 @app.route('/setup')
@@ -107,7 +108,7 @@ def setup(req, resp):
             password = req.form['password'][0]
             yield from picoweb.start_response(resp)
             yield from resp.awrite("<html><head><style TYPE=\"text/css\">html {font-family: sans-serif;}</style></head><body>")
-            yield from resp.awrite("Saved config.for SSID {}<br />".format(ssid))
+            yield from resp.awrite("Saved config.<br />")
             yield from resp.awrite("<a href=\"/reset\">Reboot</a> to connect to wifi {}".format(ssid))
             wifi_config = open("wifi.cfg", 'w')
             wifi_config.write(ssid)
@@ -119,11 +120,15 @@ def setup(req, resp):
         yield from resp.awrite("<html><head><style TYPE=\"text/css\">html {font-family: sans-serif;}</style></head><body>")
         yield from resp.awrite("""
 <form id=\"wifi_config\" method=\"post\">
-SSID:
- <input name=\"ssid\" type=\"text\" >
- Password:
- <input name=\"password\" type=\"password\">
- <input type=\"submit\" value=\"Save\">
+<table><tr>
+<td>SSID:</td>
+<td><input name=\"ssid\" type=\"text\" ></td></tr>
+<tr>
+<td>Password:</td>
+<td><input name=\"password\" type=\"password\"></td></tr>
+<tr>
+<td></td><td><input type=\"submit\" value=\"Save\"></td></tr>
+</table>
 </form>
 """)
         yield from resp.awrite("</body></html>")
