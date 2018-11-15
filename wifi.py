@@ -37,5 +37,8 @@ def do_connect():
                     break
         # timeout or connected?
         if wlan.isconnected():
+            # disable access-point
+            ap_if = network.WLAN(network.AP_IF)
+            ap_if.active(False)
             port_io.set_output(cfg.LED_G, 1)
             print('network config:', wlan.ifconfig())
