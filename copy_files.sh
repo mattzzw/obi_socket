@@ -6,7 +6,7 @@ WEBREPL_CLI=../../esp8266/webrepl/webrepl_cli.py
 PASSWD=Secret
 IP=192.168.4.1
 
-for file in *.py
+for file in obi_socket/*.py
 do
     echo $file
     $WEBREPL_CLI -p $PASSWD $file $IP:/
