@@ -1,6 +1,7 @@
 import config as cfg
 import port_io
 import utime
+import network
 
 def do_connect():
     try:
@@ -16,8 +17,10 @@ def do_connect():
         ssid = ''
         pw = ''
 
+    # start access-point to be sure
+    ap_if = network.WLAN(network.AP_IF)
+    ap_if.active(True)
     if wifi_cfg_exists == True:
-        import network
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
 
