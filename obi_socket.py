@@ -3,7 +3,8 @@ import picoweb
 import ujson
 import config as cfg
 import port_io
-import time
+import wifi
+import utime
 import os
 import gc
 
@@ -134,5 +135,8 @@ def setup(req, resp):
         yield from resp.awrite("</body></html>")
 
 
+
+
+wifi.do_connect()
 port_io.blink_led()
 app.run(debug=True, port = 80,  host = '0.0.0.0')
