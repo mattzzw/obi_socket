@@ -5,20 +5,25 @@ import config as cfg
 import port_io
 import wifi
 import utime
-import os
+import uos
 import gc
+import ubinascii
 
 app = picoweb.WebApp("myApp")
 
 html_header = "<html><head><style TYPE=\"text/css\">html \
     {font-family: sans-serif;}</style></head><body>"
-html_wifi_form = "<form id=\"wifi_config\" method=\"post\"> \
+html_wifi_form = "Enter wifi client config:</br> \
+    <form id=\"wifi_config\" method=\"post\"> \
     <table><tr> \
     <td>SSID:</td> \
     <td><input name=\"ssid\" type=\"text\" ></td></tr> \
     <tr> \
     <td>Password:</td> \
     <td><input name=\"password\" type=\"password\"></td></tr> \
+    <tr> \
+    <td>Hostname:</td> \
+    <td><input name=\"hostname\" type=\"text\" value=\"obi-socket\"></td></tr> \
     <tr> \
     <td></td><td><input type=\"submit\" value=\"Save\"></td></tr> \
     </table> \
@@ -91,16 +96,27 @@ def index(req, resp):
     if method == "POST":
         pass
     else:
+        # GET
         import network
         wlan = network.WLAN(network.STA_IF)
         status = port_io.get_ports_status()
+        wifi_cfg = wifi.get_wifi_cfg()
+        if len(wifi_cfg) == 0:
+            mac = ubinascii.hexlify(wlan.config('mac')).decode()
+            hostname = "obi-socket-{}".format(mac[-6:])
+            ssid = "not configured"
+        else:
+            hostname = wifi_cfg['hostname']
+            ssid = wifi_cfg['ssid']
         yield from picoweb.start_response(resp)
         yield from resp.awrite(html_header)
-        yield from resp.awrite("<h1>Hi, this is {}</h1>".format(os.uname()[0]))
-        yield from resp.awrite("<pre>Wifi interface: {} <br />".format(wlan.ifconfig()))
-        yield from resp.awrite("Firmware version: {} <br />".format(os.uname()[3]))
-        yield from resp.awrite("{} bytes free<br />".format(gc.mem_free()))
-        yield from resp.awrite("Port status: {}</pre>".format(ujson.dumps(status)))
+        yield from resp.awrite("<h1>Hi, this is {}</h1>".format(hostname))
+        yield from resp.awrite("<pre>")
+        yield from resp.awrite("Wifi interface   : {} <br />".format(wlan.ifconfig()))
+        yield from resp.awrite("Configured SSID  : {} <br />".format(ssid))
+        yield from resp.awrite("Firmware version : {} <br />".format(uos.uname()[3]))
+        yield from resp.awrite("Bytes free       : {} <br />".format(gc.mem_free()))
+        yield from resp.awrite("Port status      : {}</pre>".format(ujson.dumps(status)))
         yield from resp.awrite("<a href=\"/setup\">Wifi Setup</a>")
         yield from resp.awrite("<hr />Power is")
         if port_io.get_output(cfg.RELAY) == 1:
@@ -109,6 +125,7 @@ def index(req, resp):
             yield from resp.awrite("<h2>OFF</h2>")
         yield from resp.awrite("<a href=\"/toggle?pwr=0\">Toggle</a><br />")
         yield from resp.awrite("</body></html>")
+        gc.collect()
 
 @app.route('/setup')
 def setup(req, resp):
@@ -118,16 +135,21 @@ def setup(req, resp):
         if req.form.get('ssid'):
             ssid = req.form['ssid'][0]
             password = req.form['password'][0]
+            hostname = req.form['hostname'][0]
+            cfg_dict = dict()
+            cfg_dict['ssid'] = ssid
+            cfg_dict['pw'] = password
+            cfg_dict['hostname'] = hostname
+
             yield from picoweb.start_response(resp)
             yield from resp.awrite(html_header)
             yield from resp.awrite("Saved config.<br />")
             yield from resp.awrite("<a href=\"/reset\">Reboot</a> to connect to wifi {}".format(ssid))
             wifi_config = open("wifi.cfg", 'w')
-            wifi_config.write(ssid)
-            wifi_config.write('\n')
-            wifi_config.write(password)
+            wifi_config.write(ujson.dumps(cfg_dict))
             wifi_config.close()
     else:
+        # GET - show form
         yield from picoweb.start_response(resp)
         yield from resp.awrite(html_header)
         yield from resp.awrite(html_wifi_form)

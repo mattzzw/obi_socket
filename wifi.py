@@ -3,33 +3,35 @@ import port_io
 import utime
 import ubinascii
 import network
+import ujson
+
+def get_wifi_cfg():
+    try:
+        f = open("wifi.cfg")
+        p = f.read()
+        f.close()
+    except:
+        p = '{}'
+    return ujson.loads(p)
+
 
 def do_connect():
 
     wlan = network.WLAN(network.STA_IF)
 
+    cfg_dict = get_wifi_cfg()
     try:
-        f = open("wifi.cfg")
-        p = f.read()
-        f.close()
-        s = p.split()
-        if len(s) > 1:
-            ssid = s[0]
-            pw = s[1]
-            wifi_cfg_exists = True
-        else:
-            wifi_cfg_exists = False
-
-    except OSError:
+        ssid = cfg_dict['ssid']
+        pw = cfg_dict['pw']
+        hostname = cfg_dict['hostname']
+        wifi_cfg_exists = True
+    except:
         wifi_cfg_exists = False
-        ssid = ''
-        pw = ''
+
 
     if wifi_cfg_exists == True:
         wlan.active(True)
         if not wlan.isconnected():
-            mac = ubinascii.hexlify(wlan.config('mac')).decode()
-            hostname = "obi_socket-{}".format(mac[-6:])
             print("INFO: Setting client hostname to {}".format(hostname))
             wlan.config(dhcp_hostname=hostname)
             print('INFO: Connecting to network...')
