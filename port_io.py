@@ -34,7 +34,7 @@ def button_on_off_callback(pin):
         # check for long_press
         pr_time = utime.ticks_ms()
         while (pin.value() == 0):
-            if utime.ticks_ms() > pr_time + 3000:
+            if utime.ticks_ms() > pr_time + 10000:
                 print("INFO: Resetting config, rebooting.")
                 blink_led(100)
                 import machine
