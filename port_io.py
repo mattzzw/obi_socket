@@ -1,6 +1,35 @@
 from machine import Pin
 import config as cfg
-import time
+import utime
+
+
+class Button:
+    """
+    Debounced pin handler
+    """
+    def __init__(self, pin, callback, trigger=Pin.IRQ_FALLING, min_ago=50):
+        self.callback = callback
+        self.min_ago = min_ago
+        self._next_call = utime.ticks_ms() + self.min_ago
+        pin.irq(trigger=trigger, handler=self.debounce_handler)
+
+    def call_callback(self, pin):
+        self.callback(pin)
+
+    def debounce_handler(self, pin):
+        if utime.ticks_ms() > self._next_call:
+            self._next_call = utime.ticks_ms() + self.min_ago
+            self.call_callback(pin)
+        #else:
+        #    print("debounce: %s" % (self._next_call - time.ticks_ms()))
+
+def button_on_off_callback(pin):
+    print("INFO: Button (%s) changed to: %r" % (pin, pin.value()))
+    # toggle relay on releasing the button
+    if pin.value():
+        toggle_output(cfg.RELAY)
+        s = get_output(cfg.RELAY)
+        set_output(cfg.LED_R, s)
 
 def toggle_output(port_id):
     set_output(port_id, not get_output(port_id))
@@ -48,32 +77,17 @@ def setup_ports():
         # setup input port
         # hack to clean pending interrupts
         on_off = Pin(cfg.inputs[cfg.ON_OFF]['pin'], Pin.IN, Pin.PULL_UP)
-        on_off.irq(trigger = Pin.IRQ_FALLING, handler = None)
-        time.sleep(0.5)
-        on_off.irq(trigger = Pin.IRQ_FALLING, handler = toggle_on_off)
-
-def toggle_on_off(p):
-    # hack to disable interrupts
-    on_off = Pin(cfg.inputs[cfg.ON_OFF]['pin'], Pin.IN, Pin.PULL_UP)
-    on_off.irq(trigger = 0, handler = toggle_on_off)
-    print("INFO: Button pressed:", p)
-    toggle_output(cfg.RELAY)
-    s = get_output(cfg.RELAY)
-    set_output(cfg.LED_R, s)
-    # debounce time
-    time.sleep(0.5)
-    on_off.irq(trigger = Pin.IRQ_FALLING, handler = toggle_on_off)
-
+        button_on_off = Button(pin=on_off, callback=button_on_off_callback)
 
 def blink_led():
     for i in range(0,20):
         toggle_output(cfg.LED_R)
-        time.sleep(0.03)
+        utime.sleep(0.03)
 
 def toggle_each_port():
     for port in range (1, len(cfg.outputs) + 1):
         cfg.outputs[port]['obj'].value(0)
-        time.sleep(0.2)
+        utime.sleep(0.2)
     for port in range (1, len(cfg.outputs) + 1):
         cfg.outputs[port]['obj'].value(1)
-        time.sleep(0.2)
+        utime.sleep(0.2)
