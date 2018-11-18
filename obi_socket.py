@@ -10,6 +10,20 @@ import gc
 
 app = picoweb.WebApp("myApp")
 
+html_header = "<html><head><style TYPE=\"text/css\">html \
+    {font-family: sans-serif;}</style></head><body>"
+html_wifi_form = "<form id=\"wifi_config\" method=\"post\"> \
+    <table><tr> \
+    <td>SSID:</td> \
+    <td><input name=\"ssid\" type=\"text\" ></td></tr> \
+    <tr> \
+    <td>Password:</td> \
+    <td><input name=\"password\" type=\"password\"></td></tr> \
+    <tr> \
+    <td></td><td><input type=\"submit\" value=\"Save\"></td></tr> \
+    </table> \
+    </form>"
+
 def qs_parse(qs):
     parameters = {}
     ampersandSplit = qs.split("&")
@@ -26,9 +40,9 @@ def debug_action(req, resp):
 
 @app.route('/reset')
 def reset_socket(req, resp):
-    machine.reset()
     yield from picoweb.start_response(resp)
     yield from resp.awrite("Done.")
+    machine.reset()
 
 @app.route('/status')
 def get_status(req, resp):
@@ -50,9 +64,9 @@ def switch(req, resp):
                 elif val == 'off':
                     port_io.set_output(cfg.RELAY, 0)
                     port_io.set_output(cfg.LED_R, 0)
-    status = port_io.get_ports_status()
-    yield from picoweb.start_response(resp, content_type = "application/json")
-    yield from resp.awrite(ujson.dumps(status))
+    # redirect to "/"
+    headers = {"Location": "/"}
+    yield from picoweb.start_response(resp, status="303", headers=headers)
 
 @app.route('/toggle')
 def toggle(req, resp):
@@ -60,34 +74,32 @@ def toggle(req, resp):
     parameters = qs_parse(queryString)
     for key, val in parameters.items():
         if key == 'pwr':
-            print("INFO: toggling power for {} seconds".format(key, val))
+            print("INFO: toggling power for {} seconds".format(val))
             port_io.toggle_output(cfg.RELAY)
             port_io.toggle_output(cfg.LED_R)
             if float(val) > 0:
-                time.sleep(float(val))
+                utime.sleep(float(val))
                 port_io.toggle_output(cfg.RELAY)
                 port_io.toggle_output(cfg.LED_R)
-    status = port_io.get_ports_status()
-    yield from picoweb.start_response(resp, content_type = "application/json")
-    yield from resp.awrite(ujson.dumps(status))
+    # redirect to "/"
+    headers = {"Location": "/"}
+    yield from picoweb.start_response(resp, status="303", headers=headers)
 
 @app.route("/")
 def index(req, resp):
     method = req.method
-    print("Method was:" + method)
     if method == "POST":
-        yield from picoweb.start_response(resp)
-        yield from resp.awrite("POST method incoming")
+        pass
     else:
         import network
-        yield from picoweb.start_response(resp)
         wlan = network.WLAN(network.STA_IF)
-        yield from resp.awrite("<html><head><style TYPE=\"text/css\">html {font-family: sans-serif;}</style></head><body>")
+        status = port_io.get_ports_status()
+        yield from picoweb.start_response(resp)
+        yield from resp.awrite(html_header)
         yield from resp.awrite("<h1>Hi, this is {}</h1>".format(os.uname()[0]))
         yield from resp.awrite("<pre>Wifi interface: {} <br />".format(wlan.ifconfig()))
         yield from resp.awrite("Firmware version: {} <br />".format(os.uname()[3]))
         yield from resp.awrite("{} bytes free<br />".format(gc.mem_free()))
-        status = port_io.get_ports_status()
         yield from resp.awrite("Port status: {}</pre>".format(ujson.dumps(status)))
         yield from resp.awrite("<a href=\"/setup\">Wifi Setup</a>")
         yield from resp.awrite("<hr />Power is")
@@ -101,14 +113,13 @@ def index(req, resp):
 @app.route('/setup')
 def setup(req, resp):
     method = req.method
-    print("Method was:" + method)
     if method == "POST":
         yield from req.read_form_data()
         if req.form.get('ssid'):
             ssid = req.form['ssid'][0]
             password = req.form['password'][0]
             yield from picoweb.start_response(resp)
-            yield from resp.awrite("<html><head><style TYPE=\"text/css\">html {font-family: sans-serif;}</style></head><body>")
+            yield from resp.awrite(html_header)
             yield from resp.awrite("Saved config.<br />")
             yield from resp.awrite("<a href=\"/reset\">Reboot</a> to connect to wifi {}".format(ssid))
             wifi_config = open("wifi.cfg", 'w')
@@ -118,23 +129,9 @@ def setup(req, resp):
             wifi_config.close()
     else:
         yield from picoweb.start_response(resp)
-        yield from resp.awrite("<html><head><style TYPE=\"text/css\">html {font-family: sans-serif;}</style></head><body>")
-        yield from resp.awrite("""
-<form id=\"wifi_config\" method=\"post\">
-<table><tr>
-<td>SSID:</td>
-<td><input name=\"ssid\" type=\"text\" ></td></tr>
-<tr>
-<td>Password:</td>
-<td><input name=\"password\" type=\"password\"></td></tr>
-<tr>
-<td></td><td><input type=\"submit\" value=\"Save\"></td></tr>
-</table>
-</form>
-""")
+        yield from resp.awrite(html_header)
+        yield from resp.awrite(html_wifi_form)
         yield from resp.awrite("</body></html>")
-
-
 
 
 wifi.do_connect()

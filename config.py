@@ -11,3 +11,5 @@ RELAY = 1
 LED_G = 2
 LED_R = 3
 ON_OFF = 1
+
+ap_password = "myobiPassword"
