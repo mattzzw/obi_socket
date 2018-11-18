@@ -1,9 +1,13 @@
 import config as cfg
 import port_io
 import utime
+import ubinascii
 import network
 
 def do_connect():
+
+    wlan = network.WLAN(network.STA_IF)
+
     try:
         f = open("wifi.cfg")
         p = f.read()
@@ -22,11 +26,13 @@ def do_connect():
         pw = ''
 
     if wifi_cfg_exists == True:
-        wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
-
         if not wlan.isconnected():
-            print('connecting to network...')
+            mac = ubinascii.hexlify(wlan.config('mac')).decode()
+            hostname = "obi_socket-{}".format(mac[-6:])
+            print("INFO: Setting client hostname to {}".format(hostname))
+            wlan.config(dhcp_hostname=hostname)
+            print('INFO: Connecting to network...')
             wlan.connect(ssid, pw)
             tmo = 0
             while not wlan.isconnected():
@@ -39,11 +45,16 @@ def do_connect():
                 if tmo > 50: # timeout after ~10 seconds
                     wlan.active(False)
                     break
+    else:
+        # no client config found
+        print("INFO: No wifi client config found.")
+        wlan.active(False)
+
     # timeout or connected?
-    wlan = network.WLAN(network.STA_IF)
     if wlan.isconnected():
+            print("INFO: Wifi client connected. Stopping access-point.")
             # disable access-point
             ap_if = network.WLAN(network.AP_IF)
             ap_if.active(False)
             port_io.set_output(cfg.LED_G, 1)
-            print('network config:', wlan.ifconfig())
+            print('INFO: Network config:', wlan.ifconfig())

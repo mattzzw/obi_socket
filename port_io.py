@@ -30,6 +30,18 @@ def button_on_off_callback(pin):
         toggle_output(cfg.RELAY)
         s = get_output(cfg.RELAY)
         set_output(cfg.LED_R, s)
+    else:
+        # check for long_press
+        pr_time = utime.ticks_ms()
+        while (pin.value() == 0):
+            if utime.ticks_ms() > pr_time + 3000:
+                print("INFO: Resetting config, rebooting.")
+                blink_led(100)
+                import machine
+                import os
+                os.remove("wifi.cfg")
+                machine.reset()
+
 
 def toggle_output(port_id):
     set_output(port_id, not get_output(port_id))
@@ -79,8 +91,8 @@ def setup_ports():
         on_off = Pin(cfg.inputs[cfg.ON_OFF]['pin'], Pin.IN, Pin.PULL_UP)
         button_on_off = Button(pin=on_off, callback=button_on_off_callback)
 
-def blink_led():
-    for i in range(0,20):
+def blink_led(n):
+    for i in range(0,n):
         toggle_output(cfg.LED_R)
         utime.sleep(0.03)
 

@@ -135,5 +135,5 @@ def setup(req, resp):
 
 
 wifi.do_connect()
-port_io.blink_led()
+port_io.blink_led(20)
 app.run(debug=True, port = 80,  host = '0.0.0.0')
