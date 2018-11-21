@@ -1,10 +1,16 @@
 # obi_socket
-Alternative firmware for the cheap OBI wifi socket based on an ESP8266
+
+Alternative firmware for the cheap OBI wifi socket based on an ESP8266.
+
+- [Intro](#intro)
+- [Hacking the Socket](#hacking-the-socket)
+- [Web API](#web-api)
+- [MQTT](#mqtt)
 
 ## Intro
 There are several cheap wifi sockets around and most of them are already supported by excellent projects like [Tasmota](https://github.com/arendst/Sonoff-Tasmota) - including this socket.
 
-However, the objective of this project is about creating a pyhon based software that provides a REST-like api to control the socket via http calls.
+However, the objective of this project is about creating a Python based software that provides a REST-like api to control the socket via http calls.
 
 The software is based on [micropython](https://micropython.org/) and the [picoweb](https://github.com/pfalcon/picoweb) framework.
 
@@ -13,6 +19,8 @@ The hardware used is a 9€ power socket I bought from a hardware store ('OBI') 
 But the basics are the same: LEDs, a button, a relay and an ESP8266. Yay.
 
 ![obi web socket](https://github.com/mattzzw/obi_socket/wiki/images/product.jpg)
+
+## Hacking the Socket
 
 More details about how to hack this socket can be found [in the wiki](https://github.com/mattzzw/obi_socket/wiki).
 
@@ -26,3 +34,13 @@ More details about how to hack this socket can be found [in the wiki](https://gi
 | `/toggle?pwr=<seconds>` | toggle power for x seconds, use `pwr=0` to toggle only once |
 | `/status` | returns port status as JSON |
 | `/reset` | reset/reboot socket |
+
+## MQTT
+
+The socket tries to connect to the mqtt server configured in `config.py`.
+```
+mqtt_server = 'iot.eclipse.org'
+mqtt_sub_topic = 'switch/action'
+mqtt_pub_topic = 'switch/status'
+```
+Implemented actions are `on/off/toggle`.

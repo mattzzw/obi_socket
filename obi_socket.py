@@ -206,11 +206,15 @@ wifi.do_connect()
 CLIENT_ID = ubinascii.hexlify(machine.unique_id())
 c = MQTTClient(CLIENT_ID, cfg.mqtt_server)
 c.set_callback(sub_cb)
-c.connect()
-c.subscribe(cfg.mqtt_sub_topic)
-tim = Timer(-1)
-tim.init(period=200, mode=Timer.PERIODIC, callback=lambda t:c.check_msg())
-print("INFO: MQTT: Connected as {} to {}, subscribed to {} topic".format(CLIENT_ID, cfg.mqtt_server, cfg.mqtt_sub_topic))
+try:
+    c.connect()
+    c.subscribe(cfg.mqtt_sub_topic)
+    tim = Timer(-1)
+    tim.init(period=200, mode=Timer.PERIODIC, callback=lambda t:c.check_msg())
+    print("INFO: MQTT: Connected as {} to {}, subscribed to {} topic".format(CLIENT_ID, cfg.mqtt_server, cfg.mqtt_sub_topic))
+except:
+    print("ERROR: MQTT: Connection to {} failed.".format(cfg.mqtt_sub_topic))
+    
 # Show that we are ready
 port_io.blink_led(40)
 # Start web app
