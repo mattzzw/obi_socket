@@ -8,23 +8,22 @@ import utime
 import uos
 import gc
 import ubinascii
-import utemplate
 
 app = picoweb.WebApp(None)
 
 html_header = '''<!DOCTYPE html>
 <html>
 <head>
-<title>Title of the document</title>
-<link rel="stylesheet" href="static/mini-default.css">
+<title>obi-socket</title>
+<link rel="stylesheet" href="/static/mini-default.css">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
 <header class="sticky row">
   <div class="col-sm col-md-10 col-md-offset-1">
-    <a href="#" role="button">Home</a>
-    <a href="#" role="button">Setup</a>
-    <a href="#" role="button">System</a>
+    <a href="/" role="button">Home</a>
+    <a href="/setup" role="button">Setup</a>
+    <a href="/system" role="button">System</a>
   </div>
 </header>
 <br />
@@ -116,32 +115,10 @@ def index(req, resp):
         pass
     else:
         # GET
-        import network
-        wlan = network.WLAN(network.STA_IF)
-        status = port_io.get_ports_status()
-        wifi_cfg = wifi.get_wifi_cfg()
-        if len(wifi_cfg) == 0:
-            mac = ubinascii.hexlify(wlan.config('mac')).decode()
-            hostname = "obi-socket-{}".format(mac[-6:])
-            ssid = "not configured"
-        else:
-            hostname = wifi_cfg['hostname']
-            ssid = wifi_cfg['ssid']
-        on = port_io.get_output(cfg.RELAY)
-        args = (hostname, on)
+        (hostname, ssid) = wifi.get_hostname_ssid()
         yield from picoweb.start_response(resp)
-        yield from app.render_template(resp, 'index.html', (args,))
-
-"""
         yield from resp.awrite(html_header)
         yield from resp.awrite("<h1>Hi, this is {}</h1>".format(hostname))
-        yield from resp.awrite("<pre>")
-        yield from resp.awrite("Wifi interface   : {} <br />".format(wlan.ifconfig()))
-        yield from resp.awrite("Configured SSID  : {} <br />".format(ssid))
-        yield from resp.awrite("Firmware version : {} <br />".format(uos.uname()[3]))
-        yield from resp.awrite("Bytes free       : {} <br />".format(gc.mem_free()))
-        yield from resp.awrite("Port status      : {}</pre>".format(ujson.dumps(status)))
-        yield from resp.awrite("<a href=\"/setup\">Wifi Setup</a>")
         yield from resp.awrite("<hr />Power is")
         if port_io.get_output(cfg.RELAY) == 1:
             yield from resp.awrite("<h2>ON</h2>")
@@ -150,7 +127,31 @@ def index(req, resp):
         yield from resp.awrite("<a href=\"/toggle?pwr=0\">Toggle</a><br />")
         yield from resp.awrite("</body></html>")
         gc.collect()
-"""
+
+@app.route('/system')
+def system(req, resp):
+    method = req.method
+    if method == "POST":
+        pass
+    else:
+        # GET
+        import network
+        wlan = network.WLAN(network.STA_IF)
+        (hostname, ssid) = wifi.get_hostname_ssid()
+        status = port_io.get_ports_status()
+        yield from picoweb.start_response(resp)
+        yield from resp.awrite(html_header)
+        yield from resp.awrite("<h1>{} - System Info</h1>".format(hostname))
+        yield from resp.awrite("<p><table><thead><th>Item</th><th>Config</th></thead>")
+        yield from resp.awrite("<tr><td>Wifi interface</td><td><code>{}</code></td></tr>".format(wlan.ifconfig()))
+        yield from resp.awrite("<tr><td>Configured SSID</td><td><code>{}</code></td></tr>".format(ssid))
+        yield from resp.awrite("<tr><td>Firmware version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
+        yield from resp.awrite("<tr><td>Bytes free</td><td><code>{}</code></td></tr>".format(gc.mem_free()))
+        yield from resp.awrite("<tr><td>Port status</td><td><code>{}</code></td></tr>".format(ujson.dumps(status)))
+        yield from resp.awrite("</table>")
+        yield from resp.awrite("<a href=\"/reset\">Reboot</a>")
+        yield from resp.awrite("</body></html>")
+        gc.collect()
 
 @app.route('/setup')
 def setup(req, resp):

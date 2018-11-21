@@ -14,6 +14,18 @@ def get_wifi_cfg():
         p = '{}'
     return ujson.loads(p)
 
+def get_hostname_ssid():
+    wlan = network.WLAN(network.STA_IF)
+    wifi_cfg = get_wifi_cfg()
+    if len(wifi_cfg) == 0:
+        mac = ubinascii.hexlify(wlan.config('mac')).decode()
+        hostname = "obi-socket-{}".format(mac[-6:])
+        ssid = "not configured"
+    else:
+        hostname = wifi_cfg['hostname']
+        ssid = wifi_cfg['ssid']
+    return (hostname, ssid)
+
 
 def do_connect():
 
