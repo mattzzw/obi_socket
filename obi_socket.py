@@ -8,11 +8,30 @@ import utime
 import uos
 import gc
 import ubinascii
+import utemplate
 
-app = picoweb.WebApp("myApp")
+app = picoweb.WebApp(None)
 
-html_header = "<html><head><style TYPE=\"text/css\">html \
-    {font-family: sans-serif;}</style></head><body>"
+html_header = '''<!DOCTYPE html>
+<html>
+<head>
+<title>Title of the document</title>
+<link rel="stylesheet" href="static/mini-default.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<header class="sticky row">
+  <div class="col-sm col-md-10 col-md-offset-1">
+    <a href="#" role="button">Home</a>
+    <a href="#" role="button">Setup</a>
+    <a href="#" role="button">System</a>
+  </div>
+</header>
+<br />
+<div class="container">
+  <div class="row cols-sm-12 cols-md-10" >
+    <div class="col-md-offset-1" >
+'''
 html_wifi_form = "Enter wifi client config:</br> \
     <form id=\"wifi_config\" method=\"post\"> \
     <table><tr> \
@@ -108,7 +127,12 @@ def index(req, resp):
         else:
             hostname = wifi_cfg['hostname']
             ssid = wifi_cfg['ssid']
+        on = port_io.get_output(cfg.RELAY)
+        args = (hostname, on)
         yield from picoweb.start_response(resp)
+        yield from app.render_template(resp, 'index.html', (args,))
+
+"""
         yield from resp.awrite(html_header)
         yield from resp.awrite("<h1>Hi, this is {}</h1>".format(hostname))
         yield from resp.awrite("<pre>")
@@ -126,6 +150,7 @@ def index(req, resp):
         yield from resp.awrite("<a href=\"/toggle?pwr=0\">Toggle</a><br />")
         yield from resp.awrite("</body></html>")
         gc.collect()
+"""
 
 @app.route('/setup')
 def setup(req, resp):
