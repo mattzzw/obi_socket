@@ -8,6 +8,8 @@ import utime
 import uos
 import gc
 import ubinascii
+from umqtt.simple import MQTTClient
+from machine import Timer
 
 app = picoweb.WebApp(None)
 
@@ -46,6 +48,21 @@ html_wifi_form = "Enter wifi client config:</br> \
     <td></td><td><input type=\"submit\" value=\"Save\"></td></tr> \
     </table> \
     </form>"
+
+# MQTT callback
+def sub_cb(topic, msg):
+    print("INFO: MQTT: Received data: {}".format((topic, msg)))
+    if msg == b"on":
+        port_io.set_output(cfg.RELAY, 1)
+        port_io.set_output(cfg.LED_R, 1)
+    elif msg == b"off":
+        port_io.set_output(cfg.RELAY, 0)
+        port_io.set_output(cfg.LED_R, 0)
+    elif msg == b"toggle":
+        port_io.toggle_output(cfg.RELAY)
+        port_io.toggle_output(cfg.LED_R)
+    c.publish(cfg.mqtt_pub_topic, ujson.dumps(port_io.get_ports_status()))
+
 
 def qs_parse(qs):
     parameters = {}
@@ -182,6 +199,19 @@ def setup(req, resp):
         yield from resp.awrite("</body></html>")
 
 
+# Connect to the world...
 wifi.do_connect()
-port_io.blink_led(20)
+
+# Setup MQTT connection
+CLIENT_ID = ubinascii.hexlify(machine.unique_id())
+c = MQTTClient(CLIENT_ID, cfg.mqtt_server)
+c.set_callback(sub_cb)
+c.connect()
+c.subscribe(cfg.mqtt_sub_topic)
+tim = Timer(-1)
+tim.init(period=200, mode=Timer.PERIODIC, callback=lambda t:c.check_msg())
+print("INFO: MQTT: Connected as {} to {}, subscribed to {} topic".format(CLIENT_ID, cfg.mqtt_server, cfg.mqtt_sub_topic))
+# Show that we are ready
+port_io.blink_led(40)
+# Start web app
 app.run(debug=True, port = 80,  host = '0.0.0.0')

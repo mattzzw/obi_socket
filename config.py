@@ -13,3 +13,7 @@ LED_R = 3
 ON_OFF = 1
 
 ap_password = "myobiPassword"
+
+mqtt_server = 'iot.eclipse.org'
+mqtt_sub_topic = 'switch/action'
+mqtt_pub_topic = 'switch/status'
