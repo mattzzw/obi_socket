@@ -2,10 +2,13 @@ import ubinascii
 from umqtt.robust import MQTTClient
 import machine
 import config as cfg
+import port_io
+import ujson
+
+c = MQTTClient(cfg.mqtt_client_id, cfg.mqtt_server)
 
 def do_connect():
     # Setup MQTT connection
-    c = MQTTClient(cfg.mqtt_client_id, cfg.mqtt_server)
     c.set_callback(sub_cb)
     try:
         c.connect()   # FIXME - remember if connection was successful or not
@@ -17,6 +20,7 @@ def do_connect():
             cfg.mqtt_client_id, cfg.mqtt_server, cfg.mqtt_sub_topic))
     except Exception as e:
         print("ERROR: MQTT: Connection to {} failed: {}.".format(cfg.mqtt_sub_topic, e))
+
 
 # MQTT callback
 def sub_cb(topic, msg):
