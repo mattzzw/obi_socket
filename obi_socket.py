@@ -1,15 +1,14 @@
 import machine
 import picoweb
 import ujson
-import config as cfg
-import port_io
-import wifi
+import config as cfg    # local module
+import port_io          # local module
+import wifi             # local module
+import obi_mqtt         # local module
 import utime
 import uos
 import gc
 import ubinascii
-from umqtt.simple import MQTTClient
-from machine import Timer
 
 app = picoweb.WebApp(None)
 
@@ -49,19 +48,6 @@ html_wifi_form = "Enter wifi client config:</br> \
     </table> \
     </form>"
 
-# MQTT callback
-def sub_cb(topic, msg):
-    print("INFO: MQTT: Received data: {}".format((topic, msg)))
-    if msg == b"on":
-        port_io.set_output(cfg.RELAY, 1)
-        port_io.set_output(cfg.LED_R, 1)
-    elif msg == b"off":
-        port_io.set_output(cfg.RELAY, 0)
-        port_io.set_output(cfg.LED_R, 0)
-    elif msg == b"toggle":
-        port_io.toggle_output(cfg.RELAY)
-        port_io.toggle_output(cfg.LED_R)
-    c.publish(cfg.mqtt_pub_topic, ujson.dumps(port_io.get_ports_status()))
 
 
 def qs_parse(qs):
@@ -159,13 +145,16 @@ def system(req, resp):
         yield from picoweb.start_response(resp)
         yield from resp.awrite(html_header)
         yield from resp.awrite("<h1>{} - System Info</h1>".format(hostname))
-        yield from resp.awrite("<p><table><thead><th>Item</th><th>Config</th></thead>")
+        yield from resp.awrite("<p><table style=\"max-height:800px\"><thead><th>Item</th><th>Config</th></thead>")
         yield from resp.awrite("<tr><td>Wifi interface</td><td><code>{}</code></td></tr>".format(wlan.ifconfig()))
         yield from resp.awrite("<tr><td>Configured SSID</td><td><code>{}</code></td></tr>".format(ssid))
+        yield from resp.awrite("<tr><td>MQTT server</td><td><code>{}</code></td></tr>".format(cfg.mqtt_server))
+        yield from resp.awrite("<tr><td>MQTT sub topic</td><td><code>{}</code></td></tr>".format(cfg.mqtt_sub_topic))
+        yield from resp.awrite("<tr><td>MQTT pub topic</td><td><code>{}</code></td></tr>".format(cfg.mqtt_pub_topic))
         yield from resp.awrite("<tr><td>Firmware version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
         yield from resp.awrite("<tr><td>Bytes free</td><td><code>{}</code></td></tr>".format(gc.mem_free()))
         yield from resp.awrite("<tr><td>Port status</td><td><code>{}</code></td></tr>".format(ujson.dumps(status)))
-        yield from resp.awrite("</table>")
+        yield from resp.awrite("</table><p>")
         yield from resp.awrite("<a href=\"/reset\">Reboot</a>")
         yield from resp.awrite("</body></html>")
         gc.collect()
@@ -199,22 +188,12 @@ def setup(req, resp):
         yield from resp.awrite("</body></html>")
 
 
+# FIXME refactor/build a package in sub dir
+
 # Connect to the world...
 wifi.do_connect()
+obi_mqtt.do_connect()
 
-# Setup MQTT connection
-CLIENT_ID = ubinascii.hexlify(machine.unique_id())
-c = MQTTClient(CLIENT_ID, cfg.mqtt_server)
-c.set_callback(sub_cb)
-try:
-    c.connect()
-    c.subscribe(cfg.mqtt_sub_topic)
-    tim = Timer(-1)
-    tim.init(period=200, mode=Timer.PERIODIC, callback=lambda t:c.check_msg())
-    print("INFO: MQTT: Connected as {} to {}, subscribed to {} topic".format(CLIENT_ID, cfg.mqtt_server, cfg.mqtt_sub_topic))
-except:
-    print("ERROR: MQTT: Connection to {} failed.".format(cfg.mqtt_sub_topic))
-    
 # Show that we are ready
 port_io.blink_led(40)
 # Start web app

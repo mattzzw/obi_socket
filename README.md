@@ -37,10 +37,10 @@ More details about how to hack this socket can be found [in the wiki](https://gi
 
 ## MQTT
 
-The socket tries to connect to the mqtt server configured in `config.py`.
+On start-up the socket tries to connect to the mqtt server configured in `config.py`
+and subscribes to the topic shown in the `/system` page.
+
 ```
 mqtt_server = 'iot.eclipse.org'
-mqtt_sub_topic = 'switch/action'
-mqtt_pub_topic = 'switch/status'
 ```
 Implemented actions are `on/off/toggle`.
