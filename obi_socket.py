@@ -103,7 +103,7 @@ def toggle(req, resp):
     queryString = req.qs
     parameters = qs_parse(queryString)
     for key, val in parameters.items():
-        if key == 'pwr':
+        if key == 'duration':
             print("INFO: toggling power for {} seconds".format(val))
             port_io.toggle_output(cfg.RELAY)
             port_io.toggle_output(cfg.LED_R)
