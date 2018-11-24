@@ -11,7 +11,7 @@ def do_connect():
     # Setup MQTT connection
     c.set_callback(sub_cb)
     try:
-        c.connect()   # FIXME - remember if connection was successful or not
+        rc = c.connect()   
         c.subscribe(cfg.mqtt_sub_topic)
         # setup timer to check for messages every 200ms
         tim = machine.Timer(-1)
@@ -20,7 +20,8 @@ def do_connect():
             cfg.mqtt_client_id, cfg.mqtt_server, cfg.mqtt_sub_topic))
     except Exception as e:
         print("ERROR: MQTT: Connection to {} failed: {}.".format(cfg.mqtt_sub_topic, e))
-
+        rc = e
+    return True if rc == 0 else False
 
 # MQTT callback
 def sub_cb(topic, msg):
@@ -34,4 +35,8 @@ def sub_cb(topic, msg):
     elif msg == b"toggle":
         port_io.toggle_output(cfg.RELAY)
         port_io.toggle_output(cfg.LED_R)
-    c.publish(cfg.mqtt_pub_topic, ujson.dumps(port_io.get_ports_status()))
+    publish_status()
+
+def publish_status():
+    port_status = ujson.dumps(port_io.get_ports_status())
+    c.publish(cfg.mqtt_pub_topic, port_status)

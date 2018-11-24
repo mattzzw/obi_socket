@@ -66,9 +66,14 @@ def do_connect():
 
     # timeout or connected?
     if wlan.isconnected():
-            print("INFO: Wifi client connected. Stopping access-point.")
-            # disable access-point
-            ap_if = network.WLAN(network.AP_IF)
-            ap_if.active(False)
-            port_io.set_output(cfg.LED_G, 1)
-            print('INFO: Network config:', wlan.ifconfig())
+        print("INFO: Wifi client connected. Stopping access-point.")
+        # disable access-point
+        ap_if = network.WLAN(network.AP_IF)
+        ap_if.active(False)
+        port_io.set_output(cfg.LED_G, 1)
+        print('INFO: Network config:', wlan.ifconfig())
+        wifi_is_connected = True
+    else:
+        wifi_is_connected = False
+
+    return wifi_is_connected

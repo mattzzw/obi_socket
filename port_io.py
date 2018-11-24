@@ -1,7 +1,7 @@
 from machine import Pin
 import config as cfg
 import utime
-
+import ujson
 
 class Button:
     """
@@ -20,8 +20,6 @@ class Button:
         if utime.ticks_ms() > self._next_call:
             self._next_call = utime.ticks_ms() + self.min_ago
             self.call_callback(pin)
-        #else:
-        #    print("debounce: %s" % (self._next_call - time.ticks_ms()))
 
 def button_on_off_callback(pin):
     print("INFO: Button (%s) changed to: %r" % (pin, pin.value()))
@@ -41,7 +39,6 @@ def button_on_off_callback(pin):
                 import os
                 os.remove("wifi.cfg")
                 machine.reset()
-
 
 def toggle_output(port_id):
     set_output(port_id, not get_output(port_id))

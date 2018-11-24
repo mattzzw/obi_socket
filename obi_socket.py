@@ -9,6 +9,8 @@ import utime
 import uos
 import gc
 import ubinascii
+import ntptime
+
 
 app = picoweb.WebApp(None)
 
@@ -90,6 +92,8 @@ def switch(req, resp):
                 elif val == 'off':
                     port_io.set_output(cfg.RELAY, 0)
                     port_io.set_output(cfg.LED_R, 0)
+                obi_mqtt.publish_status()
+
     # redirect to "/"
     headers = {"Location": "/"}
     yield from picoweb.start_response(resp, status="303", headers=headers)
@@ -103,10 +107,12 @@ def toggle(req, resp):
             print("INFO: toggling power for {} seconds".format(val))
             port_io.toggle_output(cfg.RELAY)
             port_io.toggle_output(cfg.LED_R)
+            obi_mqtt.publish_status()
             if float(val) > 0:
                 utime.sleep(float(val))
                 port_io.toggle_output(cfg.RELAY)
                 port_io.toggle_output(cfg.LED_R)
+                obi_mqtt.publish_status()
     # redirect to "/"
     headers = {"Location": "/"}
     yield from picoweb.start_response(resp, status="303", headers=headers)
@@ -142,18 +148,25 @@ def system(req, resp):
         wlan = network.WLAN(network.STA_IF)
         (hostname, ssid) = wifi.get_hostname_ssid()
         status = port_io.get_ports_status()
+        try:
+            mytime = utime.localtime(ntptime.time())
+        except:
+            mytime = utime.localtime()
+        year, month, day, hour, minute, second, ms, dayinyear = mytime
         yield from picoweb.start_response(resp)
         yield from resp.awrite(html_header)
         yield from resp.awrite("<h1>{} - System Info</h1>".format(hostname))
         yield from resp.awrite("<p><table style=\"max-height:800px\"><thead><th>Item</th><th>Config</th></thead>")
         yield from resp.awrite("<tr><td>Wifi interface</td><td><code>{}</code></td></tr>".format(wlan.ifconfig()))
         yield from resp.awrite("<tr><td>Configured SSID</td><td><code>{}</code></td></tr>".format(ssid))
+        yield from resp.awrite("<tr><td>MQTT initial status</td><td><code>{}</code></td></tr>".format(mqtt_is_connected))
         yield from resp.awrite("<tr><td>MQTT server</td><td><code>{}</code></td></tr>".format(cfg.mqtt_server))
         yield from resp.awrite("<tr><td>MQTT sub topic</td><td><code>{}</code></td></tr>".format(cfg.mqtt_sub_topic))
         yield from resp.awrite("<tr><td>MQTT pub topic</td><td><code>{}</code></td></tr>".format(cfg.mqtt_pub_topic))
         yield from resp.awrite("<tr><td>Firmware version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
         yield from resp.awrite("<tr><td>Bytes free</td><td><code>{}</code></td></tr>".format(gc.mem_free()))
         yield from resp.awrite("<tr><td>Port status</td><td><code>{}</code></td></tr>".format(ujson.dumps(status)))
+        yield from resp.awrite("<tr><td>Time</td><td><code>{}-{}-{} {}:{}</code></td></tr>".format(year, month, day, hour, second))
         yield from resp.awrite("</table><p>")
         yield from resp.awrite("<a href=\"/reset\">Reboot</a>")
         yield from resp.awrite("</body></html>")
@@ -191,8 +204,11 @@ def setup(req, resp):
 # FIXME refactor/build a package in sub dir
 
 # Connect to the world...
-wifi.do_connect()
-obi_mqtt.do_connect()
+wifi_is_connected = wifi.do_connect()
+if wifi_is_connected:
+    mqtt_is_connected = obi_mqtt.do_connect()
+else:
+    mqtt_is_connected = -1
 
 # Show that we are ready
 port_io.blink_led(40)
