@@ -133,7 +133,7 @@ def index(req, resp):
             yield from resp.awrite("<h2>ON</h2>")
         else:
             yield from resp.awrite("<h2>OFF</h2>")
-        yield from resp.awrite("<a href=\"/toggle?pwr=0\">Toggle</a><br />")
+        yield from resp.awrite("<a href=\"/toggle?duration=0\">Toggle</a><br />")
         yield from resp.awrite("</body></html>")
         gc.collect()
 
