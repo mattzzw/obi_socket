@@ -21,6 +21,9 @@ ON_OFF = 1
 # Password to access esp's access point for setup
 ap_password = "myobiPassword"
 
+# time zone offset (UTC+x) in seconds
+tz_offset = 3600
+
 # MQTT config
 mqtt_client_id = ubinascii.hexlify(machine.unique_id()).decode()
 mqtt_server = 'iot.eclipse.org'

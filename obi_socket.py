@@ -26,7 +26,7 @@ html_header = '''<!DOCTYPE html>
   <div class="col-sm col-md-10 col-md-offset-1">
     <a href="/" role="button">Home</a>
     <a href="/setup" role="button">Setup</a>
-    <a href="/system" role="button">System</a>
+    <a href="/system" role="button">System Info</a>
   </div>
 </header>
 <br />
@@ -149,7 +149,7 @@ def system(req, resp):
         (hostname, ssid) = wifi.get_hostname_ssid()
         status = port_io.get_ports_status()
         try:
-            mytime = utime.localtime(ntptime.time())
+            mytime = utime.localtime(ntptime.time() + cfg.tz_offset)
         except:
             mytime = utime.localtime()
         year, month, day, hour, minute, second, ms, dayinyear = mytime
@@ -166,7 +166,7 @@ def system(req, resp):
         yield from resp.awrite("<tr><td>Firmware version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
         yield from resp.awrite("<tr><td>Bytes free</td><td><code>{}</code></td></tr>".format(gc.mem_free()))
         yield from resp.awrite("<tr><td>Port status</td><td><code>{}</code></td></tr>".format(ujson.dumps(status)))
-        yield from resp.awrite("<tr><td>Time</td><td><code>{}-{}-{} {}:{}</code></td></tr>".format(year, month, day, hour, second))
+        yield from resp.awrite("<tr><td>Time</td><td><code>{}-{}-{} {:02}:{:02}:{:02}</code></td></tr>".format(year, month, day, hour, minute, second))
         yield from resp.awrite("</table><p>")
         yield from resp.awrite("<a href=\"/reset\">Reboot</a>")
         yield from resp.awrite("</body></html>")
