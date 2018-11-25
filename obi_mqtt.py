@@ -5,13 +5,14 @@ import config as cfg
 import port_io
 import ujson
 
-c = MQTTClient(cfg.mqtt_client_id, cfg.mqtt_server)
+c = MQTTClient(cfg.mqtt_client_id, cfg.mqtt_server, user=cfg.mqtt_user,
+               password = cfg.mqtt_password)
 
 def do_connect():
     # Setup MQTT connection
     c.set_callback(sub_cb)
     try:
-        rc = c.connect()   
+        rc = c.connect()
         c.subscribe(cfg.mqtt_sub_topic)
         # setup timer to check for messages every 200ms
         tim = machine.Timer(-1)

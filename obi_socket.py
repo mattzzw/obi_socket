@@ -4,7 +4,8 @@ import ujson
 import config as cfg    # local module
 import port_io          # local module
 import wifi             # local module
-import obi_mqtt         # local module
+#import obi_mqtt         # local module
+#import obi_html         # local module
 import utime
 import uos
 import gc
@@ -26,7 +27,7 @@ html_header = '''<!DOCTYPE html>
   <div class="col-sm col-md-10 col-md-offset-1">
     <a href="/" role="button">Home</a>
     <a href="/setup" role="button">Setup</a>
-    <a href="/system" role="button">System Info</a>
+    <a href="/info" role="button">System Info</a>
   </div>
 </header>
 <br />
@@ -34,21 +35,22 @@ html_header = '''<!DOCTYPE html>
   <div class="row cols-sm-12 cols-md-10" >
     <div class="col-md-offset-1" >
 '''
-html_wifi_form = "Enter wifi client config:</br> \
-    <form id=\"wifi_config\" method=\"post\"> \
-    <table><tr> \
-    <td>SSID:</td> \
-    <td><input name=\"ssid\" type=\"text\" ></td></tr> \
-    <tr> \
-    <td>Password:</td> \
-    <td><input name=\"password\" type=\"password\"></td></tr> \
-    <tr> \
-    <td>Hostname:</td> \
-    <td><input name=\"hostname\" type=\"text\" value=\"obi-socket\"></td></tr> \
-    <tr> \
-    <td></td><td><input type=\"submit\" value=\"Save\"></td></tr> \
-    </table> \
-    </form>"
+html_wifi_form = '''Enter wifi client config:</br>
+    <form id="wifi_config" method="post">
+    <table><tr>
+    <td>SSID:</td>
+    <td><input name="ssid" type="text" ></td></tr>
+    <tr>
+    <td>Password:</td>
+    <td><input name="password" type="password"></td></tr>
+    <tr>
+    <td>Hostname:</td>
+    <td><input name="hostname" type="text" value="obi-socket"></td></tr>
+    <tr>
+    <td></td><td><input type="submit" value="Save"></td></tr>
+    </table>
+    </form>
+    '''
 
 
 
@@ -65,12 +67,6 @@ def debug_action(req, resp):
     port_io.toggle_each_port()
     yield from picoweb.start_response(resp)
     yield from resp.awrite("Done.")
-
-@app.route('/reset')
-def reset_socket(req, resp):
-    yield from picoweb.start_response(resp)
-    yield from resp.awrite("Done.")
-    machine.reset()
 
 @app.route('/status')
 def get_status(req, resp):
@@ -124,10 +120,10 @@ def index(req, resp):
         pass
     else:
         # GET
-        (hostname, ssid) = wifi.get_hostname_ssid()
+        config = cfg.load()
         yield from picoweb.start_response(resp)
         yield from resp.awrite(html_header)
-        yield from resp.awrite("<h1>Hi, this is {}</h1>".format(hostname))
+        yield from resp.awrite("<h1>Hi, this is {}</h1>".format(config['hostname']))
         yield from resp.awrite("<hr />Power is")
         if port_io.get_output(cfg.RELAY) == 1:
             yield from resp.awrite("<h2>ON</h2>")
@@ -137,7 +133,7 @@ def index(req, resp):
         yield from resp.awrite("</body></html>")
         gc.collect()
 
-@app.route('/system')
+@app.route('/info')
 def system(req, resp):
     method = req.method
     if method == "POST":
@@ -146,7 +142,7 @@ def system(req, resp):
         # GET
         import network
         wlan = network.WLAN(network.STA_IF)
-        (hostname, ssid) = wifi.get_hostname_ssid()
+        config = cfg.load()
         status = port_io.get_ports_status()
         try:
             mytime = utime.localtime(ntptime.time() + cfg.tz_offset)
@@ -155,44 +151,57 @@ def system(req, resp):
         year, month, day, hour, minute, second, ms, dayinyear = mytime
         yield from picoweb.start_response(resp)
         yield from resp.awrite(html_header)
-        yield from resp.awrite("<h1>{} - System Info</h1>".format(hostname))
+        yield from resp.awrite("<h1>{} - System Info</h1>".format(config['hostname']))
         yield from resp.awrite("<p><table style=\"max-height:800px\"><thead><th>Item</th><th>Config</th></thead>")
-        yield from resp.awrite("<tr><td>Wifi interface</td><td><code>{}</code></td></tr>".format(wlan.ifconfig()))
-        yield from resp.awrite("<tr><td>Configured SSID</td><td><code>{}</code></td></tr>".format(ssid))
-        yield from resp.awrite("<tr><td>MQTT initial status</td><td><code>{}</code></td></tr>".format(mqtt_is_connected))
-        yield from resp.awrite("<tr><td>MQTT server</td><td><code>{}</code></td></tr>".format(cfg.mqtt_server))
-        yield from resp.awrite("<tr><td>MQTT sub topic</td><td><code>{}</code></td></tr>".format(cfg.mqtt_sub_topic))
-        yield from resp.awrite("<tr><td>MQTT pub topic</td><td><code>{}</code></td></tr>".format(cfg.mqtt_pub_topic))
+        for k,v in sorted(config.items()):
+            if k != "wifi_password":
+                yield from resp.awrite("<tr><td>{}</td><td><code>{}</code></td></tr>".format(k, v))
         yield from resp.awrite("<tr><td>Firmware version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
         yield from resp.awrite("<tr><td>Bytes free</td><td><code>{}</code></td></tr>".format(gc.mem_free()))
         yield from resp.awrite("<tr><td>Port status</td><td><code>{}</code></td></tr>".format(ujson.dumps(status)))
         yield from resp.awrite("<tr><td>Time</td><td><code>{}-{}-{} {:02}:{:02}:{:02}</code></td></tr>".format(year, month, day, hour, minute, second))
         yield from resp.awrite("</table><p>")
-        yield from resp.awrite("<a href=\"/reset\">Reboot</a>")
+        yield from resp.awrite('<form action="/reset" method="post"><button name="reset" value="reset">Restart</button></form>')
+        yield from resp.awrite('<form action="/defaults" method="post"><button name="defaults" value="defaults">Defaults</button></form>')
         yield from resp.awrite("</body></html>")
         gc.collect()
+
+
+@app.route('/reset')
+def reset_socket(req, resp):
+    method=req.method
+    if method == 'POST':
+        machine.reset()
+
+@app.route('/defaults')
+def defaults(req, resp):
+    method=req.method
+    if method == 'POST':
+        cfg.clear()
+        # redirect to "/info"
+        headers = {"Location": "/info"}
+        yield from picoweb.start_response(resp, status="303", headers=headers)
+
 
 @app.route('/setup')
 def setup(req, resp):
     method = req.method
     if method == "POST":
+        cfg_dict = cfg.load()
         yield from req.read_form_data()
         if req.form.get('ssid'):
             ssid = req.form['ssid'][0]
             password = req.form['password'][0]
             hostname = req.form['hostname'][0]
-            cfg_dict = dict()
-            cfg_dict['ssid'] = ssid
-            cfg_dict['pw'] = password
+            cfg_dict['wifi_ssid'] = ssid
+            cfg_dict['wifi_password'] = password
             cfg_dict['hostname'] = hostname
-
+            cfg.save(cfg_dict)
             yield from picoweb.start_response(resp)
             yield from resp.awrite(html_header)
             yield from resp.awrite("Saved config.<br />")
             yield from resp.awrite("<a href=\"/reset\">Reboot</a> to connect to wifi {}".format(ssid))
-            wifi_config = open("wifi.cfg", 'w')
-            wifi_config.write(ujson.dumps(cfg_dict))
-            wifi_config.close()
+
     else:
         # GET - show form
         yield from picoweb.start_response(resp)
@@ -205,11 +214,12 @@ def setup(req, resp):
 
 # Connect to the world...
 wifi_is_connected = wifi.do_connect()
-if wifi_is_connected:
+'''
+if wifi_is_connected and cfg.mqtt_enabled:
     mqtt_is_connected = obi_mqtt.do_connect()
 else:
     mqtt_is_connected = -1
-
+'''
 # Show that we are ready
 port_io.blink_led(40)
 # Start web app

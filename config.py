@@ -1,5 +1,7 @@
 import machine
 import ubinascii
+import ujson
+import uos
 
 # Ports
 outputs           = {   1: { 'pin':  4, 'active': 'high', 'obj' : ''},  # relay port 1
@@ -15,17 +17,56 @@ LED_G = 2
 LED_R = 3
 ON_OFF = 1
 
+unique_machine_id = ubinascii.hexlify(machine.unique_id()).decode()
+initial_hostname = "obi-socket-{}".format(unique_machine_id)
 
-# FIXME - move the following cfg to obi_socket.cfg in json format
+initial_cfg = {
+                'hostname':         initial_hostname,
+                'wifi_ssid':        '',
+                'wifi_password':    '',
+                'ap_password':      'myobiPassword',
+                'tz_offset':        3600,
+                'mqtt_enable':      True,
+                'mqtt_client_id':   unique_machine_id,
+                'mqtt_server':      'iot.eclipse.org',
+                'mqtt_user':        '',
+                'mqtt_password':    '',
+                'mqtt_sub_topic':   unique_machine_id + '/' + 'switch/action',
+                'mqtt_pub_topic':   unique_machine_id + '/' + 'switch/status'
+}
 
-# Password to access esp's access point for setup
-ap_password = "myobiPassword"
+def load():
+    # check if this is 1st time configuration
+    try:
+        f = open("obi_socket.cfg")
+    except:
+        # first time
+        print('INFO: No config found, using initial config.')
+        cfg_dict = initial_cfg
+    else:
+        p = f.read()
+        f.close()
+        print('INFO: Loaded existing config.')
+        cfg_dict = ujson.loads(p)
+    print('INFO: Loaded cfg:')
+    dump_cfg(cfg_dict)
+    return cfg_dict
 
-# time zone offset (UTC+x) in seconds
-tz_offset = 3600
+def save(cfg_dict):
+    print('INFO: saving cfg:')
+    dump_cfg(cfg_dict)
+    f = open("obi_socket.cfg", 'w')
+    f.write(ujson.dumps(cfg_dict))
+    f.close()
 
-# MQTT config
-mqtt_client_id = ubinascii.hexlify(machine.unique_id()).decode()
-mqtt_server = 'iot.eclipse.org'
-mqtt_sub_topic = mqtt_client_id + '/' + 'switch/action'
-mqtt_pub_topic = mqtt_client_id + '/' + 'switch/status'
+def clear():
+    try:
+        uos.remove("obi_socket.cfg")
+    except:
+        pass
+    else:
+        print('INFO: Cleared/deleted config.')
+
+def dump_cfg(cfg):
+    for k, v in sorted(cfg.items()):
+        print('INFO: CFG: {:<15}: {:<20}'.format(k, v))

@@ -37,7 +37,7 @@ def button_on_off_callback(pin):
                 blink_led(100)
                 import machine
                 import os
-                os.remove("wifi.cfg")
+                cfg.clear()
                 machine.reset()
 
 def toggle_output(port_id):
