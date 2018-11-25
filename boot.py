@@ -22,7 +22,7 @@ print("INFO: --- Setting up AP ---")
 config = cfg.load()
 ap_if = network.WLAN(network.AP_IF)
 ap_if.active(True)
-print("INFO: Setting AP name to {}".format(config.['hostname']))
+print("INFO: Setting AP name to {}".format(config['hostname']))
 print("INFO: Seeting Pw to {}".format(config['ap_password']))
 try:
     ap_if.config(essid=config['hostname'], authmode=network.AUTH_WPA_WPA2_PSK, \

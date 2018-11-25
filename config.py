@@ -48,13 +48,13 @@ def load():
         f.close()
         print('INFO: Loaded existing config.')
         cfg_dict = ujson.loads(p)
-    print('INFO: Loaded cfg:')
-    dump_cfg(cfg_dict)
+    #print('INFO: Loaded cfg:')
+    #dump_cfg(cfg_dict)
     return cfg_dict
 
 def save(cfg_dict):
-    print('INFO: saving cfg:')
-    dump_cfg(cfg_dict)
+    #print('INFO: saving cfg:')
+    #dump_cfg(cfg_dict)
     f = open("obi_socket.cfg", 'w')
     f.write(ujson.dumps(cfg_dict))
     f.close()
