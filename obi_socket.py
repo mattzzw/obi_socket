@@ -11,6 +11,7 @@ import uos
 import gc
 import ubinascii
 import ntptime
+import uasyncio as asyncio
 
 
 app = picoweb.WebApp(None)
@@ -35,6 +36,7 @@ html_header = '''<!DOCTYPE html>
   <div class="row cols-sm-12 cols-md-10" >
     <div class="col-md-offset-1" >
 '''
+
 html_wifi_form = '''Enter wifi client config:</br>
     <form id="wifi_config" method="post">
     <table><tr>
@@ -51,7 +53,6 @@ html_wifi_form = '''Enter wifi client config:</br>
     </table>
     </form>
     '''
-
 
 
 def qs_parse(qs):
@@ -161,26 +162,33 @@ def system(req, resp):
         yield from resp.awrite("<tr><td>Port status</td><td><code>{}</code></td></tr>".format(ujson.dumps(status)))
         yield from resp.awrite("<tr><td>Time</td><td><code>{}-{}-{} {:02}:{:02}:{:02}</code></td></tr>".format(year, month, day, hour, minute, second))
         yield from resp.awrite("</table><p>")
-        yield from resp.awrite('<form action="/reset" method="post"><button name="reset" value="reset">Restart</button></form>')
-        yield from resp.awrite('<form action="/defaults" method="post"><button name="defaults" value="defaults">Defaults</button></form>')
+        yield from resp.awrite('<form action="/restart" method="post"><button name="restart" value="restart">Restart</button></form>')
+        yield from resp.awrite('<form action="/reset" method="post"><button name="reset" value="reset">Reset defaults</button></form>')
         yield from resp.awrite("</body></html>")
         gc.collect()
 
 
-@app.route('/reset')
+@app.route('/restart')
 def reset_socket(req, resp):
     method=req.method
     if method == 'POST':
+        # redirect to "/info"
+        yield from picoweb.start_response(resp)
+        yield from resp.awrite(html_header)
+        yield from resp.awrite("Restarting...<br />")
+        await asyncio.sleep(3)
         machine.reset()
 
-@app.route('/defaults')
-def defaults(req, resp):
+@app.route('/reset')
+def reset_defaults(req, resp):
     method=req.method
     if method == 'POST':
         cfg.clear()
-        # redirect to "/info"
-        headers = {"Location": "/info"}
-        yield from picoweb.start_response(resp, status="303", headers=headers)
+        yield from picoweb.start_response(resp)
+        yield from resp.awrite(html_header)
+        yield from resp.awrite("Deleted config.<br />")
+        yield from resp.awrite("<a href=\"/setup\">Setup</a> a wifi connection")
+        yield from resp.awrite("</body></html>")
 
 
 @app.route('/setup')
@@ -200,7 +208,8 @@ def setup(req, resp):
             yield from picoweb.start_response(resp)
             yield from resp.awrite(html_header)
             yield from resp.awrite("Saved config.<br />")
-            yield from resp.awrite("<a href=\"/reset\">Reboot</a> to connect to wifi {}".format(ssid))
+            yield from resp.awrite('<form action="/restart" method="post"> \
+                                   <button name="Restart">Connect to {}</button></form>'.format(ssid))
 
     else:
         # GET - show form
