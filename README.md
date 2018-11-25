@@ -33,12 +33,18 @@ More details about how to hack this socket can be found [in the wiki](https://gi
 | `/switch?pwr=<on/off>` | switch power on/off |
 | `/toggle?duration=<seconds>` | toggle power for x seconds, use `duration=0` to toggle only once |
 | `/status` | returns port status as JSON |
-| `/reset` | reset/reboot socket |
+
+### POST methods
+
+| URI | Description |
+|-----|-------------|
+| `/restart` | restart socket |
+| `/reset` | reset socket to default cfg |
 
 ## MQTT
 
 On start-up the socket tries to connect to the mqtt server configured in `config.py`
-and subscribes to the topic shown in the `/system` page.
+and subscribes to the topic shown in the `/info` page.
 
 ```
 mqtt_server = 'iot.eclipse.org'

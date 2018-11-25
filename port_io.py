@@ -1,7 +1,6 @@
 from machine import Pin
 import config as cfg
 import utime
-import ujson
 
 class Button:
     """

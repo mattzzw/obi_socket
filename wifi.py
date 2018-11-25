@@ -1,10 +1,7 @@
 import config as cfg
 import port_io
 import utime
-import ubinascii
 import network
-import ujson
-
 
 def do_connect():
     wlan = network.WLAN(network.STA_IF)
@@ -15,7 +12,6 @@ def do_connect():
         wifi_cfg_exists = True
     else:
         wifi_cfg_exists = False
-
 
     if wifi_cfg_exists == True:
         wlan.active(True)

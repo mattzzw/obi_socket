@@ -4,7 +4,7 @@ import ujson
 import config as cfg    # local module
 import port_io          # local module
 import wifi             # local module
-#import obi_mqtt         # local module
+import obi_mqtt         # local module
 #import obi_html         # local module
 import utime
 import uos
@@ -221,14 +221,13 @@ def setup(req, resp):
 
 # FIXME refactor/build a package in sub dir
 
+
+
 # Connect to the world...
 wifi_is_connected = wifi.do_connect()
-'''
-if wifi_is_connected and cfg.mqtt_enabled:
-    mqtt_is_connected = obi_mqtt.do_connect()
-else:
-    mqtt_is_connected = -1
-'''
+if wifi_is_connected:
+    obi_mqtt.do_connect()
+
 # Show that we are ready
 port_io.blink_led(40)
 # Start web app
