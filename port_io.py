@@ -91,11 +91,3 @@ def blink_led(n):
     for i in range(0,n):
         toggle_output(cfg.LED_R)
         utime.sleep(0.03)
-
-def toggle_each_port():
-    for port in range (1, len(cfg.outputs) + 1):
-        cfg.outputs[port]['obj'].value(0)
-        utime.sleep(0.2)
-    for port in range (1, len(cfg.outputs) + 1):
-        cfg.outputs[port]['obj'].value(1)
-        utime.sleep(0.2)

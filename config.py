@@ -2,6 +2,7 @@ import machine
 import ubinascii
 import ujson
 import uos
+import gc
 
 # Ports
 outputs           = {   1: { 'pin':  4, 'active': 'high', 'obj' : ''},  # relay port 1
@@ -35,7 +36,11 @@ initial_cfg = {
                 'mqtt_pub_topic':   unique_machine_id + '/' + 'switch/status'
 }
 
+# ----------------------------------------------------------------------------
+
 def load():
+    gc.collect()
+    print("DEBUG: Before load: ", gc.mem_free())
     # check if this is 1st time configuration
     try:
         f = open("obi_socket.cfg")
@@ -46,14 +51,15 @@ def load():
     else:
         p = f.read()
         f.close()
-        print('INFO: Loaded existing config.')
         cfg_dict = ujson.loads(p)
-    #print('INFO: Loaded cfg:')
+    print('INFO: Loading cfg')
     #dump_cfg(cfg_dict)
+    gc.collect()
+    print("DEBUG: After load: ", gc.mem_free())
     return cfg_dict
 
 def save(cfg_dict):
-    #print('INFO: saving cfg:')
+    print('INFO: Saving cfg')
     #dump_cfg(cfg_dict)
     f = open("obi_socket.cfg", 'w')
     f.write(ujson.dumps(cfg_dict))

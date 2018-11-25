@@ -6,11 +6,10 @@ import port_io          # local module
 import wifi             # local module
 import obi_mqtt         # local module
 #import obi_html         # local module
+import obi_time         # local module
 import utime
 import uos
 import gc
-import ubinascii
-import ntptime
 import uasyncio as asyncio
 
 
@@ -20,7 +19,7 @@ html_header = '''<!DOCTYPE html>
 <html>
 <head>
 <title>obi-socket</title>
-<link rel="stylesheet" href="/static/mini-default.css">
+<link rel="stylesheet" href="/mini-default.min.css">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
@@ -59,21 +58,6 @@ html_action = '''<p>
 	Toggle</button></a>
 '''
 
-
-def qs_parse(qs):
-    parameters = {}
-    ampersandSplit = qs.split("&")
-    for element in ampersandSplit:
-        equalSplit = element.split("=")
-        parameters[equalSplit[0]] = equalSplit[1]
-    return parameters
-
-@app.route('/debug')
-def debug_action(req, resp):
-    port_io.toggle_each_port()
-    yield from picoweb.start_response(resp)
-    yield from resp.awrite("Done.")
-
 @app.route('/status')
 def get_status(req, resp):
     status = port_io.get_ports_status()
@@ -83,15 +67,15 @@ def get_status(req, resp):
 @app.route('/switch')
 def switch(req, resp):
     queryString = req.qs
-    parameters = qs_parse(queryString)
+    parameters = picoweb.parse_qs(queryString)
     for key, val in parameters.items():
         if key == 'pwr':
-            if val in ('on', 'off'):
-                print("INFO: switching power to {}".format(val))
-                if val == 'on':
+            if val[0] in ('on', 'off'):
+                print("INFO: switching power to {}".format(val[0]))
+                if val[0] == 'on':
                     port_io.set_output(cfg.RELAY, 1)
                     port_io.set_output(cfg.LED_R, 1)
-                elif val == 'off':
+                elif val[0] == 'off':
                     port_io.set_output(cfg.RELAY, 0)
                     port_io.set_output(cfg.LED_R, 0)
                 obi_mqtt.publish_status()
@@ -103,14 +87,14 @@ def switch(req, resp):
 @app.route('/toggle')
 def toggle(req, resp):
     queryString = req.qs
-    parameters = qs_parse(queryString)
+    parameters = picoweb.parse_qs(queryString)
     for key, val in parameters.items():
         if key == 'duration':
-            print("INFO: toggling power for {} seconds".format(val))
+            print("INFO: toggling power for {} seconds".format(val[0]))
             port_io.toggle_output(cfg.RELAY)
             port_io.toggle_output(cfg.LED_R)
             obi_mqtt.publish_status()
-            if float(val) > 0:
+            if float(val[0]) > 0:
                 utime.sleep(float(val))
                 port_io.toggle_output(cfg.RELAY)
                 port_io.toggle_output(cfg.LED_R)
@@ -121,6 +105,8 @@ def toggle(req, resp):
 
 @app.route("/")
 def index(req, resp):
+    gc.collect()
+    print(gc.mem_free())
     method = req.method
     if method == "POST":
         pass
@@ -129,8 +115,8 @@ def index(req, resp):
         config = cfg.load()
         yield from picoweb.start_response(resp)
         yield from resp.awrite(html_header)
-        yield from resp.awrite("<h1>Hi, this is {}</h1>".format(config['hostname']))
-        yield from resp.awrite("<hr />Power is")
+        yield from resp.awrite("<center><h1>Hi, this is {}</h1><hr />".format(config['hostname']))
+        yield from resp.awrite("Power is")
         if port_io.get_output(cfg.RELAY) == 1:
             yield from resp.awrite("<h2>ON</h2>")
         else:
@@ -138,6 +124,7 @@ def index(req, resp):
         yield from resp.awrite(html_action)
         yield from resp.awrite("</div></div></div></body></html>")
         gc.collect()
+        print(gc.mem_free())
 
 @app.route('/info')
 def system(req, resp):
@@ -150,11 +137,6 @@ def system(req, resp):
         wlan = network.WLAN(network.STA_IF)
         config = cfg.load()
         status = port_io.get_ports_status()
-        try:
-            mytime = utime.localtime(ntptime.time() + cfg.tz_offset)
-        except:
-            mytime = utime.localtime()
-        year, month, day, hour, minute, second, ms, dayinyear = mytime
         yield from picoweb.start_response(resp)
         yield from resp.awrite(html_header)
         yield from resp.awrite("<h1>{} - System Info</h1>".format(config['hostname']))
@@ -165,7 +147,8 @@ def system(req, resp):
         yield from resp.awrite("<tr><td>Firmware version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
         yield from resp.awrite("<tr><td>Bytes free</td><td><code>{}</code></td></tr>".format(gc.mem_free()))
         yield from resp.awrite("<tr><td>Port status</td><td><code>{}</code></td></tr>".format(ujson.dumps(status)))
-        yield from resp.awrite("<tr><td>Time</td><td><code>{}-{}-{} {:02}:{:02}:{:02}</code></td></tr>".format(year, month, day, hour, minute, second))
+        (year, month, day, weekday, hours, minutes, seconds, subseconds) = obi_time.rtc.datetime()
+        yield from resp.awrite("<tr><td>Time</td><td><code>{}-{}-{} {:02}:{:02}:{:02}</code></td></tr>".format(year, month, day, hours, minutes, seconds))
         yield from resp.awrite("</table><p>")
         yield from resp.awrite('<form action="/restart" method="post"><button name="restart" value="restart">Restart</button></form>')
         yield from resp.awrite('<form action="/reset" method="post"><button name="reset" value="reset">Reset defaults</button></form>')
@@ -223,15 +206,13 @@ def setup(req, resp):
         yield from resp.awrite(html_wifi_form)
         yield from resp.awrite("</body></html>")
 
-
 # FIXME refactor/build a package in sub dir
-
-
 
 # Connect to the world...
 wifi_is_connected = wifi.do_connect()
 if wifi_is_connected:
     obi_mqtt.do_connect()
+    obi_time.set_rtc_from_ntp()
 
 # Show that we are ready
 port_io.blink_led(40)

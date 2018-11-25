@@ -9,7 +9,6 @@ import wifi
 import port_io
 import config as cfg
 import network
-import ubinascii
 
 print("INFO: --- Starting up. ---")
 webrepl.start()
