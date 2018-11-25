@@ -50,6 +50,11 @@ html_wifi_form = "Enter wifi client config:</br> \
     </table> \
     </form>"
 
+html_action = '''<p>
+    <a href="http://obi-socket/toggle?duration=0">
+	<button class="primary large"><span class="icon-settings inverse"></span>
+	Toggle</button></a>
+'''
 
 
 def qs_parse(qs):
@@ -85,7 +90,7 @@ def switch(req, resp):
     for key, val in parameters.items():
         if key == 'pwr':
             if val in ('on', 'off'):
-                print("INFO: switching power to {}".format(key, val))
+                print("INFO: switching power to {}".format(val))
                 if val == 'on':
                     port_io.set_output(cfg.RELAY, 1)
                     port_io.set_output(cfg.LED_R, 1)
@@ -133,8 +138,8 @@ def index(req, resp):
             yield from resp.awrite("<h2>ON</h2>")
         else:
             yield from resp.awrite("<h2>OFF</h2>")
-        yield from resp.awrite("<a href=\"/toggle?duration=0\">Toggle</a><br />")
-        yield from resp.awrite("</body></html>")
+        yield from resp.awrite(html_action)
+        yield from resp.awrite("</div></div></div></body></html>")
         gc.collect()
 
 @app.route('/system')
