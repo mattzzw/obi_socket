@@ -5,58 +5,14 @@ import config as cfg    # local module
 import port_io          # local module
 import wifi             # local module
 import obi_mqtt         # local module
-#import obi_html         # local module
+import obi_html         # local module
 import obi_time         # local module
 import utime
 import uos
 import gc
 import uasyncio as asyncio
 
-
 app = picoweb.WebApp(None)
-
-html_header = '''<!DOCTYPE html>
-<html>
-<head>
-<title>obi-socket</title>
-<link rel="stylesheet" href="/mini-default.min.css">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-<header class="sticky row">
-  <div class="col-sm col-md-10 col-md-offset-1">
-    <a href="/" role="button">Home</a>
-    <a href="/setup" role="button">Setup</a>
-    <a href="/info" role="button">System Info</a>
-  </div>
-</header>
-<br />
-<div class="container">
-  <div class="row cols-sm-12 cols-md-10" >
-    <div class="col-md-offset-1" >
-'''
-
-html_wifi_form = '''Enter wifi client config:</br>
-    <form id="wifi_config" method="post">
-    <table><tr>
-    <td>SSID:</td>
-    <td><input name="ssid" type="text" ></td></tr>
-    <tr>
-    <td>Password:</td>
-    <td><input name="password" type="password"></td></tr>
-    <tr>
-    <td>Hostname:</td>
-    <td><input name="hostname" type="text" value="obi-socket"></td></tr>
-    <tr>
-    <td></td><td><input type="submit" value="Save"></td></tr>
-    </table>
-    </form>
-    '''
-html_action = '''<p>
-    <a href="http://obi-socket/toggle?duration=0">
-	<button class="primary large"><span class="icon-settings inverse"></span>
-	Toggle</button></a>
-'''
 
 @app.route('/status')
 def get_status(req, resp):
@@ -78,7 +34,7 @@ def switch(req, resp):
                 elif val[0] == 'off':
                     port_io.set_output(cfg.RELAY, 0)
                     port_io.set_output(cfg.LED_R, 0)
-                obi_mqtt.publish_status()
+                #obi_mqtt.publish_status()
 
     # redirect to "/"
     headers = {"Location": "/"}
@@ -93,12 +49,12 @@ def toggle(req, resp):
             print("INFO: toggling power for {} seconds".format(val[0]))
             port_io.toggle_output(cfg.RELAY)
             port_io.toggle_output(cfg.LED_R)
-            obi_mqtt.publish_status()
+            #obi_mqtt.publish_status()
             if float(val[0]) > 0:
                 utime.sleep(float(val))
                 port_io.toggle_output(cfg.RELAY)
                 port_io.toggle_output(cfg.LED_R)
-                obi_mqtt.publish_status()
+                #obi_mqtt.publish_status()
     # redirect to "/"
     headers = {"Location": "/"}
     yield from picoweb.start_response(resp, status="303", headers=headers)
@@ -114,14 +70,14 @@ def index(req, resp):
         # GET
         config = cfg.load()
         yield from picoweb.start_response(resp)
-        yield from resp.awrite(html_header)
+        yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite("<center><h1>Hi, this is {}</h1><hr />".format(config['hostname']))
         yield from resp.awrite("Power is")
         if port_io.get_output(cfg.RELAY) == 1:
             yield from resp.awrite("<h2>ON</h2>")
         else:
             yield from resp.awrite("<h2>OFF</h2>")
-        yield from resp.awrite(html_action)
+        yield from resp.awrite(obi_html.html_action)
         yield from resp.awrite("</div></div></div></body></html>")
         gc.collect()
         print(gc.mem_free())
@@ -138,7 +94,7 @@ def system(req, resp):
         config = cfg.load()
         status = port_io.get_ports_status()
         yield from picoweb.start_response(resp)
-        yield from resp.awrite(html_header)
+        yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite("<h1>{} - System Info</h1>".format(config['hostname']))
         yield from resp.awrite("<p><table style=\"max-height:800px\"><thead><th>Item</th><th>Config</th></thead>")
         for k,v in sorted(config.items()):
@@ -162,7 +118,7 @@ def reset_socket(req, resp):
     if method == 'POST':
         # redirect to "/info"
         yield from picoweb.start_response(resp)
-        yield from resp.awrite(html_header)
+        yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite("Restarting...<br />")
         await asyncio.sleep(3)
         machine.reset()
@@ -173,7 +129,7 @@ def reset_defaults(req, resp):
     if method == 'POST':
         cfg.clear()
         yield from picoweb.start_response(resp)
-        yield from resp.awrite(html_header)
+        yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite("Deleted config.<br />")
         yield from resp.awrite("<a href=\"/setup\">Setup</a> a wifi connection")
         yield from resp.awrite("</body></html>")
@@ -181,30 +137,40 @@ def reset_defaults(req, resp):
 
 @app.route('/setup')
 def setup(req, resp):
+    gc.collect()
+    print("DEBUG: Before: ", gc.mem_free())
+
     method = req.method
     if method == "POST":
-        cfg_dict = cfg.load()
+        cfg_dict = {}
         yield from req.read_form_data()
-        if req.form.get('ssid'):
-            ssid = req.form['ssid'][0]
-            password = req.form['password'][0]
-            hostname = req.form['hostname'][0]
-            cfg_dict['wifi_ssid'] = ssid
-            cfg_dict['wifi_password'] = password
-            cfg_dict['hostname'] = hostname
-            cfg.save(cfg_dict)
-            yield from picoweb.start_response(resp)
-            yield from resp.awrite(html_header)
-            yield from resp.awrite("Saved config.<br />")
-            yield from resp.awrite('<form action="/restart" method="post"> \
-                                   <button name="Restart">Connect to {}</button></form>'.format(ssid))
+        print("DEBUG: form data: ", req.form)
+        for k, v in req.form.items():
+            cfg_dict[k] = v[0]
+        cfg.save(cfg_dict)
+        yield from picoweb.start_response(resp)
+        yield from resp.awrite(obi_html.html_header)
+        yield from resp.awrite("Saved config.<br />")
+        yield from resp.awrite('<form action="/restart" method="post"> \
+                               <button name="Restart">Connect to {}</button></form>'.format("blah"))
 
     else:
         # GET - show form
+        cfg_dict = cfg.load()
         yield from picoweb.start_response(resp)
-        yield from resp.awrite(html_header)
-        yield from resp.awrite(html_wifi_form)
-        yield from resp.awrite("</body></html>")
+        yield from resp.awrite(obi_html.html_header)
+        yield from resp.awrite('</br><form id="wifi_config" method="post">')
+        yield from resp.awrite('<div class="input-group vertical">')
+        for k, v in sorted(cfg_dict.items()):
+            if k == 'wifi_password':
+                yield from resp.awrite('{}: <input name="{}" type="password" value="{}"><br />'.format(k, k, v))
+            else:
+                yield from resp.awrite('{}: <input name="{}" value="{}"><br />'.format(k, k, v))
+        yield from resp.awrite('<br /><input type="submit" value="Save"><br />')
+        yield from resp.awrite("</div></form></body></html>")
+    gc.collect()
+    print("DEBUG: After:  ", gc.mem_free())
+
 
 # FIXME refactor/build a package in sub dir
 

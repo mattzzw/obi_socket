@@ -59,11 +59,15 @@ def load():
     return cfg_dict
 
 def save(cfg_dict):
+    gc.collect()
+    print("DEBUG: Before save: ", gc.mem_free())
     print('INFO: Saving cfg')
     #dump_cfg(cfg_dict)
     f = open("obi_socket.cfg", 'w')
     f.write(ujson.dumps(cfg_dict))
     f.close()
+    gc.collect()
+    print("DEBUG: After  save: ", gc.mem_free())
 
 def clear():
     try:

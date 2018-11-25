@@ -28,7 +28,7 @@ def do_connect():
                      callback=lambda t:c.check_msg())
             print("INFO: MQTT: Connected as client {} to {}, subscribed to topic {}".format(
                 config['mqtt_client_id'], config['mqtt_server'], config['mqtt_sub_topic']))
-            config['mqtt_connection']='Success'
+            config['mqtt_con_status']='Success'
         cfg.save(config)
     else:
         cfg.save(config)
@@ -45,7 +45,7 @@ def sub_cb(topic, msg):
     elif msg == b"toggle":
         port_io.toggle_output(cfg.RELAY)
         port_io.toggle_output(cfg.LED_R)
-    publish_status()
+    #publish_status()
 
 def publish_status():
     port_status = ujson.dumps(port_io.get_ports_status())
