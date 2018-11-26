@@ -19,7 +19,7 @@ def do_connect():
             print("INFO: Setting client hostname to {}".format(config['hostname']))
             wlan.config(dhcp_hostname=config['hostname'])
             print('INFO: Connecting to network...')
-            wlan.connect(config['wifi_ssid'], config['wifi_password'])
+            wlan.connect(config['wifi_ssid'], config['wifi_pw'])
             tmo = 0
             while not wlan.isconnected():
                 # try to connect and flash green LED

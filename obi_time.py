@@ -3,10 +3,9 @@ import utime
 import config as cfg
 import ntptime
 
-config = cfg.load()
 rtc = machine.RTC()
 
-def set_rtc_from_ntp():
+def set_rtc_from_ntp(config):
     try:
         mytime = utime.localtime(ntptime.time() + int(config['tz_offset']))
     except:

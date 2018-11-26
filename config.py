@@ -4,6 +4,9 @@ import ujson
 import uos
 import gc
 
+gc.collect()
+buf = bytearray(512)
+
 # Ports
 outputs           = {   1: { 'pin':  4, 'active': 'high', 'obj' : ''},  # relay port 1
                         2: { 'pin': 12, 'active': 'high', 'obj' : ''},  # LED green
@@ -24,16 +27,16 @@ initial_hostname = "obi-socket-{}".format(unique_machine_id)
 initial_cfg = {
                 'hostname':         initial_hostname,
                 'wifi_ssid':        '',
-                'wifi_password':    '',
-                'ap_password':      'myobiPassword',
+                'wifi_pw':          '',
+                'ap_pw':            'myobiPassword',
                 'tz_offset':        3600,
                 'mqtt_enable':      True,
-                'mqtt_client_id':   unique_machine_id,
+                'mqtt_cid':          unique_machine_id,
                 'mqtt_server':      'iot.eclipse.org',
                 'mqtt_user':        '',
-                'mqtt_password':    '',
-                'mqtt_sub_topic':   unique_machine_id + '/' + 'switch/action',
-                'mqtt_pub_topic':   unique_machine_id + '/' + 'switch/status'
+                'mqtt_pw':          '',
+                'mqtt_subt':        unique_machine_id + '/' + 'switch/action',
+                'mqtt_pubt':        unique_machine_id + '/' + 'switch/status'
 }
 
 # ----------------------------------------------------------------------------
@@ -49,22 +52,22 @@ def load():
         print('INFO: No config found, using initial config.')
         cfg_dict = initial_cfg
     else:
-        p = f.read()
+        buf = f.read()
         f.close()
-        cfg_dict = ujson.loads(p)
+        cfg_dict = ujson.loads(buf)
     print('INFO: Loading cfg')
     #dump_cfg(cfg_dict)
     gc.collect()
     print("DEBUG: After load: ", gc.mem_free())
     return cfg_dict
 
-def save(cfg_dict):
+def save():
     gc.collect()
     print("DEBUG: Before save: ", gc.mem_free())
     print('INFO: Saving cfg')
     #dump_cfg(cfg_dict)
     f = open("obi_socket.cfg", 'w')
-    f.write(ujson.dumps(cfg_dict))
+    ujson.dump(buf, f)
     f.close()
     gc.collect()
     print("DEBUG: After  save: ", gc.mem_free())
