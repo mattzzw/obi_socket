@@ -9,7 +9,8 @@ mqtt_con_status = 'Not connected'
 def init_client(config):
     client = MQTTClient(config['mqtt_cid'], config['mqtt_server'],
                    user = config['mqtt_user'],
-               password = config['mqtt_pw'])
+               password = config['mqtt_pw'],
+               keepalive = int(config['mqtt_keepalive']))
     return client
 
 def do_connect(client, config):
@@ -46,3 +47,9 @@ def sub_cb(topic, msg):
     elif msg == b"toggle":
         port_io.toggle_output(cfg.RELAY)
         port_io.toggle_output(cfg.LED_R)
+    # FIXME how to publish mqtt status in callback routing?
+    # Can't config/client parameters
+
+def publish_status(client, config, msg):
+    client.publish(config['mqtt_pubt'], msg)
+    print("INFO: MQTT: Published data to {}: {}".format(config['mqtt_pubt'], msg))

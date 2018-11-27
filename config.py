@@ -25,11 +25,13 @@ initial_cfg = {
                 'ap_pw':            'myobiPassword',
                 'tz_offset':        3600,
                 'mqtt_enable':      True,
-                'mqtt_cid':          unique_machine_id,
+                'mqtt_keepalive':   0,
+                'mqtt_cid':         unique_machine_id,
                 'mqtt_server':      'iot.eclipse.org',
                 'mqtt_user':        '',
                 'mqtt_pw':          '',
-                'mqtt_subt':        unique_machine_id + '/' + 'switch/action'
+                'mqtt_subt':        unique_machine_id + '/' + 'switch/action',
+                'mqtt_pubt':        unique_machine_id + '/' + 'switch/status'
 }
 
 # ----------------------------------------------------------------------------

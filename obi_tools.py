@@ -21,12 +21,19 @@ def load_cfg():
     else:
         buf = f.read()
         f.close()
+
+    try:
         cfg_dict = ujson.loads(buf)
-    print('INFO: Loading cfg')
-    #dump_cfg(cfg_dict)
-    gc.collect()
-    print("DEBUG: After load: ", gc.mem_free())
-    return cfg_dict
+    except OSError:
+        print("ERROR: Reading JSON: {}, deleting config, restarting.".format(OSError))
+        clear_cfg()
+        machine.reset()
+    else:
+        print('INFO: Loading cfg')
+        #dump_cfg(cfg_dict)
+        gc.collect()
+        print("DEBUG: After load: ", gc.mem_free())
+        return cfg_dict
 
 def save_cfg():
     gc.collect()

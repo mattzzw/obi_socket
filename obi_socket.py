@@ -37,7 +37,7 @@ def switch(req, resp):
                 elif val[0] == 'off':
                     port_io.set_output(cfg.RELAY, 0)
                     port_io.set_output(cfg.LED_R, 0)
-                #obi_mqtt.publish_status(client, conf)
+                obi_mqtt.publish_status(client, conf, val[0])
 
     # redirect to "/"
     headers = {"Location": "/"}
@@ -52,12 +52,12 @@ def toggle(req, resp):
             print("INFO: toggling power for {} seconds".format(val[0]))
             port_io.toggle_output(cfg.RELAY)
             port_io.toggle_output(cfg.LED_R)
-            #obi_mqtt.publish_status(client, conf)
+            obi_mqtt.publish_status(client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
             if float(val[0]) > 0:
                 utime.sleep(float(val))
                 port_io.toggle_output(cfg.RELAY)
                 port_io.toggle_output(cfg.LED_R)
-                #obi_mqtt.publish_status(client, conf)
+                obi_mqtt.publish_status(client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
     # redirect to "/"
     headers = {"Location": "/"}
     yield from picoweb.start_response(resp, status="303", headers=headers)
@@ -135,6 +135,9 @@ def reset_defaults(req, resp):
         obi_tools.clear_cfg()
         conf = obi_tools.load_cfg()
 
+@app.route('/download_cfg')
+def download_cfg(req, resp):
+    yield from app.sendfile(resp, 'obi_socket.cfg', "application/octet-stream")
 
 @app.route('/setup')
 def setup(req, resp):
