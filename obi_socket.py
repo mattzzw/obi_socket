@@ -25,9 +25,8 @@ def get_status(req, resp):
 
 @app.route('/switch')
 def switch(req, resp):
-    queryString = req.qs
-    parameters = picoweb.parse_qs(queryString)
-    for key, val in parameters.items():
+    req.parse_qs()
+    for key, val in req.form.items():
         if key == 'pwr':
             if val[0] in ('on', 'off'):
                 print("INFO: switching power to {}".format(val[0]))
@@ -45,9 +44,8 @@ def switch(req, resp):
 
 @app.route('/toggle')
 def toggle(req, resp):
-    queryString = req.qs
-    parameters = picoweb.parse_qs(queryString)
-    for key, val in parameters.items():
+    req.parse_qs()
+    for key, val in req.form.items():
         if key == 'duration':
             print("INFO: toggling power for {} seconds".format(val[0]))
             port_io.toggle_output(cfg.RELAY)
@@ -178,17 +176,10 @@ def setup(req, resp):
 
 # FIXME refactor/build a package in sub dir
 
-# start access-point to be sure
-print("INFO: --- Setting up AP ---")
-ap_if = network.WLAN(network.AP_IF)
-ap_if.active(True)
-print("INFO: Setting AP name to {}".format(conf['hostname']))
-print("INFO: Seeting Pw to {}".format(conf['ap_pw']))
-try:
-    ap_if.config(essid=conf['hostname'], authmode=network.AUTH_WPA_WPA2_PSK, \
-                 password=conf['ap_pw'])
-except OSError:
-    print("ERROR: Setting up AP failed.")
+
+
+# start access-point
+obi_wifi.start_accesspoint(conf)
 
 # Connect to the world...
 wifi_is_connected = obi_wifi.do_connect(conf)

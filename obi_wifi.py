@@ -48,3 +48,15 @@ def do_connect(config):
         wifi_is_connected = False
 
     return wifi_is_connected
+
+def start_accesspoint(conf):
+    print("INFO: --- Setting up AP ---")
+    ap_if = network.WLAN(network.AP_IF)
+    ap_if.active(True)
+    print("INFO: Setting AP name to {}".format(conf['hostname']))
+    print("INFO: Seeting Pw to {}".format(conf['ap_pw']))
+    try:
+        ap_if.config(essid=conf['hostname'], authmode=network.AUTH_WPA_WPA2_PSK, \
+                     password=conf['ap_pw'])
+    except OSError:
+        print("ERROR: Setting up AP failed.")
