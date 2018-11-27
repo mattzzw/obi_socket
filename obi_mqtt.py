@@ -46,10 +46,3 @@ def sub_cb(topic, msg):
     elif msg == b"toggle":
         port_io.toggle_output(cfg.RELAY)
         port_io.toggle_output(cfg.LED_R)
-    # FIXME can't pass more parameters to sub_cb
-    #publish_status(client, config)
-
-def publish_status(client, config):
-    port_status = ujson.dumps(port_io.get_ports_status())
-    client.publish(config['mqtt_pubt'], port_status)
-    print("INFO: MQTT: Published data to {}: {}".format(config['mqtt_pubt'], port_status))

@@ -29,8 +29,7 @@ initial_cfg = {
                 'mqtt_server':      'iot.eclipse.org',
                 'mqtt_user':        '',
                 'mqtt_pw':          '',
-                'mqtt_subt':        unique_machine_id + '/' + 'switch/action',
-                'mqtt_pubt':        unique_machine_id + '/' + 'switch/status'
+                'mqtt_subt':        unique_machine_id + '/' + 'switch/action'
 }
 
 # ----------------------------------------------------------------------------
