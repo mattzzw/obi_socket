@@ -5,7 +5,7 @@ import uos, machine
 uos.dupterm(machine.UART(0, 115200), 1)
 import gc
 import webrepl
-import wifi
+import obi_wifi
 import port_io
 import config as cfg
 import network

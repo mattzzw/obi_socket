@@ -4,17 +4,18 @@ import picoweb
 import ujson
 import config as cfg    # local module
 import port_io          # local module
-import wifi             # local module
+import obi_wifi         # local module
 import obi_mqtt         # local module
 import obi_html         # local module
 import obi_time         # local module
+import obi_tools        # local module
 import utime
 import uos
 import gc
 import uasyncio as asyncio
 
 app = picoweb.WebApp(None)
-config = cfg.load()
+conf = obi_tools.load_cfg()
 
 @app.route('/status')
 def get_status(req, resp):
@@ -36,7 +37,7 @@ def switch(req, resp):
                 elif val[0] == 'off':
                     port_io.set_output(cfg.RELAY, 0)
                     port_io.set_output(cfg.LED_R, 0)
-                #obi_mqtt.publish_status()
+                #obi_mqtt.publish_status(client, conf)
 
     # redirect to "/"
     headers = {"Location": "/"}
@@ -51,12 +52,12 @@ def toggle(req, resp):
             print("INFO: toggling power for {} seconds".format(val[0]))
             port_io.toggle_output(cfg.RELAY)
             port_io.toggle_output(cfg.LED_R)
-            #obi_mqtt.publish_status()
+            #obi_mqtt.publish_status(client, conf)
             if float(val[0]) > 0:
                 utime.sleep(float(val))
                 port_io.toggle_output(cfg.RELAY)
                 port_io.toggle_output(cfg.LED_R)
-                #obi_mqtt.publish_status()
+                #obi_mqtt.publish_status(client, conf)
     # redirect to "/"
     headers = {"Location": "/"}
     yield from picoweb.start_response(resp, status="303", headers=headers)
@@ -70,10 +71,9 @@ def index(req, resp):
         pass
     else:
         # GET
-        config = cfg.load()
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
-        yield from resp.awrite("<center><h1>Hi, this is {}</h1><hr />".format(config['hostname']))
+        yield from resp.awrite("<center><h1>Hi, this is {}</h1><hr />".format(conf['hostname']))
         yield from resp.awrite("Power is")
         if port_io.get_output(cfg.RELAY) == 1:
             yield from resp.awrite("<h2>ON</h2>")
@@ -91,16 +91,16 @@ def system(req, resp):
         pass
     else:
         # GET
-        import network
+        gc.collect()
         wlan = network.WLAN(network.STA_IF)
-        config = cfg.load()
         status = port_io.get_ports_status()
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
-        yield from resp.awrite("<h1>{} - System Info</h1>".format(config['hostname']))
-        yield from resp.awrite("<p><table style=\"max-height:800px\"><thead><th>Item</th><th>Config</th></thead>")
+        yield from resp.awrite("<h1>{} - System Info</h1>".format(conf['hostname']))
+        yield from resp.awrite("<p><table style=\"max-height:800px\"><thead><th>Item</th><th>conf</th></thead>")
         yield from resp.awrite("<tr><td>Firmware version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
         yield from resp.awrite("<tr><td>Bytes free</td><td><code>{}</code></td></tr>".format(gc.mem_free()))
+        yield from resp.awrite("<tr><td>Initial MQTT connection status</td><td><code>{}</code></td></tr>".format(obi_mqtt.mqtt_con_status))
         yield from resp.awrite("<tr><td>Port status</td><td><code>{}</code></td></tr>".format(ujson.dumps(status)))
         (year, month, day, weekday, hours, minutes, seconds, subseconds) = obi_time.rtc.datetime()
         yield from resp.awrite("<tr><td>Time</td><td><code>{}-{}-{} {:02}:{:02}:{:02}</code></td></tr>".format(year, month, day, hours, minutes, seconds))
@@ -124,14 +124,16 @@ def reset_socket(req, resp):
 
 @app.route('/reset')
 def reset_defaults(req, resp):
+    global conf
     method=req.method
     if method == 'POST':
-        cfg.clear()
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite("Deleted config.<br />")
         yield from resp.awrite("<a href=\"/setup\">Setup</a> a wifi connection")
         yield from resp.awrite("</body></html>")
+        obi_tools.clear_cfg()
+        conf = obi_tools.load_cfg()
 
 
 @app.route('/setup')
@@ -146,22 +148,21 @@ def setup(req, resp):
             #print("INFO: DEBUG: {:<15} : {:<20}".format(k, v[0]))
             cfg_dict[k] = v[0]
         gc.collect()
-        cfg.buf = cfg_dict
-        cfg.save()
+        obi_tools.buf = cfg_dict
+        obi_tools.save_cfg()
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite("Saved config.<br />")
         yield from resp.awrite('<form action="/restart" method="post"> \
-                               <button name="Restart">Restart</button></form>')
+                               <button name="Restart">Restart to apply changes</button></form>')
 
     else:
         # GET - show form
-        cfg_dict = cfg.load()
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite('</br><form id="wifi_config" method="post">')
         yield from resp.awrite('<div class="input-group vertical">')
-        for k, v in sorted(cfg_dict.items()):
+        for k, v in sorted(conf.items()):
             if k == 'wifi_pw':
                 yield from resp.awrite('{}: <input name="{}" type="password" value="{}"><br />'.format(k, k, v))
             else:
@@ -178,20 +179,20 @@ def setup(req, resp):
 print("INFO: --- Setting up AP ---")
 ap_if = network.WLAN(network.AP_IF)
 ap_if.active(True)
-print("INFO: Setting AP name to {}".format(config['hostname']))
-print("INFO: Seeting Pw to {}".format(config['ap_pw']))
+print("INFO: Setting AP name to {}".format(conf['hostname']))
+print("INFO: Seeting Pw to {}".format(conf['ap_pw']))
 try:
-    ap_if.config(essid=config['hostname'], authmode=network.AUTH_WPA_WPA2_PSK, \
-                 password=config['ap_pw'])
+    ap_if.config(essid=conf['hostname'], authmode=network.AUTH_WPA_WPA2_PSK, \
+                 password=conf['ap_pw'])
 except OSError:
     print("ERROR: Setting up AP failed.")
 
 # Connect to the world...
-wifi_is_connected = wifi.do_connect()
+wifi_is_connected = obi_wifi.do_connect(conf)
 if wifi_is_connected:
-    client = obi_mqtt.init_client(config)
-    obi_mqtt.do_connect(client, config)
-    obi_time.set_rtc_from_ntp(config)
+    client = obi_mqtt.init_client(conf)
+    obi_mqtt.do_connect(client, conf)
+    obi_time.set_rtc_from_ntp(conf)
 
 # Show that we are ready
 port_io.blink_led(40)
