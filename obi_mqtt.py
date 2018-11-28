@@ -16,7 +16,7 @@ def init_client(config):
 def do_connect(client, config):
     # Setup MQTT connection
     global mqtt_con_status
-    if config['mqtt_enable'] != 0:
+    if config['mqtt_enable'] == 'True':
         client.set_callback(sub_cb)
         try:
             rc = client.connect()
@@ -51,5 +51,6 @@ def sub_cb(topic, msg):
     # Can't config/client parameters
 
 def publish_status(client, config, msg):
-    client.publish(config['mqtt_pubt'], msg)
-    print("INFO: MQTT: Published data to {}: {}".format(config['mqtt_pubt'], msg))
+    if config['mqtt_enable'] == 'True':
+        client.publish(config['mqtt_pubt'], msg)
+        print("INFO: MQTT: Published data to {}: {}".format(config['mqtt_pubt'], msg))
