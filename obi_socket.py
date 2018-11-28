@@ -96,6 +96,7 @@ def system(req, resp):
         yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite("<h1>{} - System Info</h1>".format(conf['hostname']))
         yield from resp.awrite("<p><table style=\"max-height:800px\"><thead><th>Item</th><th>conf</th></thead>")
+        yield from resp.awrite("<tr><td>Network config</td><td><code>{}</code></td></tr>".format(wlan.ifconfig()))
         yield from resp.awrite("<tr><td>Firmware version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
         yield from resp.awrite("<tr><td>Bytes free</td><td><code>{}</code></td></tr>".format(gc.mem_free()))
         yield from resp.awrite("<tr><td>Initial MQTT connection status</td><td><code>{}</code></td></tr>".format(obi_mqtt.mqtt_con_status))
@@ -188,6 +189,8 @@ if wifi_is_connected:
     client = obi_mqtt.init_client(conf)
     obi_mqtt.do_connect(client, conf)
     obi_time.set_rtc_from_ntp(conf)
+else:
+    client = None
 
 # Show that we are ready
 port_io.blink_led(40)
