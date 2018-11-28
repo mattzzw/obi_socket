@@ -2,11 +2,11 @@ import machine
 import ubinascii
 
 # Ports
-outputs           = {   1: { 'pin':  4, 'active': 'high', 'obj' : ''},  # relay port 1
-                        2: { 'pin': 12, 'active': 'high', 'obj' : ''},  # LED green
-                        3: { 'pin': 13, 'active': 'high', 'obj' : ''}   # LED red
+outputs           = {   1: { 'pin': 15, 'active': 'high', 'obj' : ''},  # relay port 1
+                        2: { 'pin': 2, 'active': 'low', 'obj' : ''},  # LED green
+                        3: { 'pin': 0, 'active': 'low', 'obj' : ''}   # LED red
                         }
-inputs            = {   1: { 'pin':  5}}  # on/off switch
+inputs            = {   1: { 'pin':  13}}  # on/off switch
 
 
 # Consts
