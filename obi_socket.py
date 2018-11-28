@@ -173,10 +173,11 @@ def setup(req, resp):
     gc.collect()
     print("DEBUG: After:  ", gc.mem_free())
 
-
 # FIXME refactor/build a package in sub dir
 
-
+# init main app
+print("INFO: Setting up I/O ports:")
+port_io.setup_ports()
 
 # start access-point
 obi_wifi.start_accesspoint(conf)
