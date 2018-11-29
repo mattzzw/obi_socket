@@ -1,6 +1,7 @@
 # obi_socket
 
-[![version][version-badge]][CHANGELOG] [![license][license-badge]][LICENSE]
+
+[![version][version-badge]](CHANGELOG.md) [![license][license-badge]](LICENSE)
 
 
 Alternative firmware for cheap wifi sockets based on an ESP8266.
