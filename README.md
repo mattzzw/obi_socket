@@ -1,5 +1,8 @@
 # obi_socket
 
+[![version][version-badge]][CHANGELOG] [![license][license-badge]][LICENSE]
+
+
 Alternative firmware for cheap wifi sockets based on an ESP8266.
 
 The software is based on [micropython](https://micropython.org/) and the [picoweb](https://github.com/pfalcon/picoweb) framework.
