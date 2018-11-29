@@ -1,8 +1,8 @@
 # obi_socket
 
 
-[![version][version-badge]](CHANGELOG.md) [![license][license-badge]](LICENSE)
-
+[![version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg)](CHANGELOG.md) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Alternative firmware for cheap wifi sockets based on an ESP8266.
 
