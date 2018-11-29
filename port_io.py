@@ -36,7 +36,7 @@ def button_on_off_callback(pin):
                 blink_led(100)
                 import machine
                 import os
-                cfg.clear()
+                obi_tools.clear()
                 machine.reset()
 
 def toggle_output(port_id):
