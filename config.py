@@ -29,7 +29,7 @@ elif hw_config == 'bw-shp2':
     # Ports
     outputs           = {   1: { 'pin': 15, 'active': 'high', 'obj' : ''},  # relay port 1
                             2: { 'pin': 2,  'active': 'low',  'obj' : ''},  # LED blue
-                            3: { 'pin': 0,  'active': 'low',  'obj' : ''}   # LED red
+                            3: { 'pin': 0,  'active': 'low',  'obj' : ''},   # LED red
                             4: { 'pin': 12, 'active': 'high', 'obj' : ''}   # SEL pin
 
                             }
