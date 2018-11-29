@@ -34,6 +34,7 @@ def do_connect(config):
         # no client config found
         print("INFO: No wifi client config found.")
         wlan.active(False)
+        port_io.blink_slowly()
 
     # timeout or connected?
     if wlan.isconnected():

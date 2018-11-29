@@ -1,4 +1,4 @@
-from machine import Pin
+from machine import Pin, Timer
 import config as cfg
 import utime
 import obi_tools
@@ -98,3 +98,10 @@ def blink_led(n):
     for i in range(0,n):
         toggle_output(cfg.LED_R)
         utime.sleep(0.03)
+
+def blink_slowly_cb(t):
+    toggle_output(cfg.LED_G)
+    
+def blink_slowly():
+    timer = Timer(-1)
+    timer.init(period=1000, mode=Timer.PERIODIC, callback=blink_slowly_cb)
