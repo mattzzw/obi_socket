@@ -1,6 +1,7 @@
 from machine import Pin
 import config as cfg
 import utime
+import obi_tools
 
 class Button:
     """
@@ -36,7 +37,7 @@ def button_on_off_callback(pin):
                 blink_led(100)
                 import machine
                 import os
-                obi_tools.clear()
+                obi_tools.clear_cfg()
                 machine.reset()
 
 def toggle_output(port_id):
