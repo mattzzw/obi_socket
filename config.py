@@ -3,8 +3,8 @@ import ubinascii
 
 hw_configs = ['obi_socket', 'bw-shp2']
 
-#hw_config = 'obi-socket'
-hw_config = 'bw-shp2'
+hw_config = 'obi-socket'
+#hw_config = 'bw-shp2'
 
 # ----------------------------------------------------------------------
 if hw_config == 'obi-socket':
