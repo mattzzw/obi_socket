@@ -150,8 +150,7 @@ def setup(req, resp):
             #print("INFO: DEBUG: {:<15} : {:<20}".format(k, v[0]))
             cfg_dict[k] = v[0]
         gc.collect()
-        obi_tools.buf = cfg_dict
-        obi_tools.save_cfg()
+        obi_tools.save_cfg(cfg_dict)
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite("Saved config.<br />")
@@ -169,6 +168,13 @@ def setup(req, resp):
                 yield from resp.awrite('{}: <input name="{}" type="password" value="{}"><br />'.format(k, k, v))
             else:
                 yield from resp.awrite('{}: <input name="{}" value="{}"><br />'.format(k, k, v))
+        '''
+        # hw_config drop down list
+        yield from resp.awrite('{0}: <select name="{0}">'.format('hw_config'))
+        for k in cfg.hw_configs:
+            yield from resp.awrite('<option value="{0}">{0}</option>'.format(k))
+        yield from resp.awrite('</select>')
+        '''
         yield from resp.awrite('<button type="submit" value="Save">Save</button><br />')
         yield from resp.awrite("</div></form></body></html>")
     gc.collect()

@@ -74,7 +74,7 @@ def get_ports_status():
 def setup_ports():
     # set output ports
     for port, pcfg in cfg.outputs.items():
-        print("INFO: Setting up GPIO {} on pin {}".format(port, pcfg['pin']))
+        print("INFO: Setting up GPIO OUTPUT pin {}".format(pcfg['pin']))
         if pcfg['active'] == 'high':
             # init high active ports with 0
             pcfg['obj'] = Pin(pcfg['pin'], Pin.OUT, value=0)
@@ -82,10 +82,16 @@ def setup_ports():
             # init low active ports with 1
             pcfg['obj'] = Pin(pcfg['pin'], Pin.OUT, value=1)
 
-        # setup input port
-        # hack to clean pending interrupts
-        on_off = Pin(cfg.inputs[cfg.ON_OFF]['pin'], Pin.IN, Pin.PULL_UP)
-        button_on_off = Button(pin=on_off, callback=button_on_off_callback)
+    # setup input ports
+    for port, pcfg in cfg.inputs.items():
+        print("INFO: Setting up GPIO INPUT pin {}".format(pcfg['pin']))
+        if pcfg['pullup'] == 'True':
+            pcfg['obj'] = Pin(pcfg['pin'], Pin.IN, Pin.PULL_UP)
+        else:
+            pcfg['obj'] = Pin(pcfg['pin'], Pin.IN)
+
+    on_off = cfg.inputs[cfg.ON_OFF]['obj']
+    button_on_off = Button(pin=on_off, callback=button_on_off_callback)
 
 def blink_led(n):
     for i in range(0,n):

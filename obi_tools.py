@@ -6,7 +6,7 @@ import gc
 import config as cfg
 
 gc.collect()
-buf = bytearray(512)
+#buf = bytearray(512)
 
 def load_cfg():
     gc.collect()
@@ -36,13 +36,13 @@ def load_cfg():
             print("DEBUG: After load: ", gc.mem_free())
     return cfg_dict
 
-def save_cfg():
+def save_cfg(cfg_dict):
     gc.collect()
     print("DEBUG: Before save: ", gc.mem_free())
     print('INFO: Saving cfg')
     #dump_cfg(cfg_dict)
     f = open("obi_socket.cfg", 'w')
-    ujson.dump(buf, f)
+    ujson.dump(cfg_dict, f)
     f.close()
     gc.collect()
     print("DEBUG: After  save: ", gc.mem_free())
