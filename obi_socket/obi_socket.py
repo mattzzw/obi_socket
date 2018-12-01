@@ -2,17 +2,16 @@ import machine
 import network
 import picoweb
 import ujson
-import config as cfg    # local module
-import port_io          # local module
-import obi_wifi         # local module
-import obi_mqtt         # local module
-import obi_html         # local module
-import obi_time         # local module
-import obi_tools        # local module
 import utime
 import uos
 import gc
 import uasyncio as asyncio
+from . import config as cfg    # local module
+from . import port_io          # local module
+from . import obi_mqtt         # local module
+from . import obi_html         # local module
+from . import obi_time         # local module
+from . import obi_tools        # local module
 
 app = picoweb.WebApp(None)
 conf = obi_tools.load_cfg()
@@ -179,28 +178,3 @@ def setup(req, resp):
         yield from resp.awrite("</div></form></body></html>")
     gc.collect()
     print("DEBUG: After:  ", gc.mem_free())
-
-# FIXME refactor/build a package in sub dir
-
-# init main app
-print("INFO: Setting up I/O ports:")
-port_io.setup_ports()
-
-# start access-point
-obi_wifi.start_accesspoint(conf)
-
-# Connect to the world...
-wifi_is_connected = obi_wifi.do_connect(conf)
-if wifi_is_connected:
-    client = obi_mqtt.init_client(conf)
-    obi_mqtt.do_connect(client, conf)
-    obi_time.set_rtc_from_ntp(conf)
-else:
-    client = None
-
-# Show that we are ready
-port_io.blink_led(40)
-# Start web app
-gc.collect()
-print("DEBUG: Before app start: ", gc.mem_free())
-app.run(debug=True, port = 80,  host = '0.0.0.0')

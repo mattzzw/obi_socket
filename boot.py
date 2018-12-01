@@ -1,13 +1,12 @@
 # This file is executed on every boot (including wake-boot from deepsleep)
-#import esp
-#esp.osdebug(None)
+import esp
+esp.osdebug(None)
 import uos, machine
 uos.dupterm(machine.UART(0, 115200), 1)
 import gc
 import webrepl
-import port_io
 
-print("INFO: --- Starting up. ---")
+print("\n\nINFO: --- Starting up. ---")
 webrepl.start()
 
 gc.collect()

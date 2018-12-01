@@ -1,8 +1,8 @@
 from umqtt.robust import MQTTClient
 import machine
-import port_io
 import ujson
-import config as cfg
+from . import config as cfg
+from . import port_io
 
 mqtt_con_status = 'Not connected'
 

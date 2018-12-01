@@ -1,7 +1,7 @@
 from machine import Pin, Timer
-import config as cfg
 import utime
-import obi_tools
+from . import obi_tools
+from . import config as cfg
 
 class Button:
     """
@@ -101,7 +101,7 @@ def blink_led(n):
 
 def blink_slowly_cb(t):
     toggle_output(cfg.LED_G)
-    
+
 def blink_slowly():
     timer = Timer(-1)
     timer.init(period=1000, mode=Timer.PERIODIC, callback=blink_slowly_cb)

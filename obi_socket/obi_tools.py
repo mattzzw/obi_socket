@@ -3,7 +3,7 @@ import ubinascii
 import ujson
 import uos
 import gc
-import config as cfg
+from . import config as cfg
 
 gc.collect()
 #buf = bytearray(512)

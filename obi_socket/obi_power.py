@@ -1,7 +1,7 @@
 import utime
 from machine import Pin, Timer
-import config as cfg
-import port_io
+from . import config as cfg
+from . import port_io
 
 cf1_count = 0
 cf_count = 0

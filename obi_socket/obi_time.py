@@ -1,7 +1,7 @@
 import machine
 import utime
-import config as cfg
 import ntptime
+from . import config as cfg
 
 rtc = machine.RTC()
 

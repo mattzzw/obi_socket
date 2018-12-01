@@ -1,7 +1,8 @@
-import port_io
 import utime
 import network
-import config as cfg
+from . import config as cfg
+from . import port_io
+
 
 def do_connect(config):
     wlan = network.WLAN(network.STA_IF)
