@@ -52,21 +52,48 @@ elif hw_config == 'bw-shp2':
 unique_machine_id = ubinascii.hexlify(machine.unique_id()).decode()
 initial_hostname = "obi-socket-{}".format(unique_machine_id[:6])
 
-initial_cfg = {
-                'hostname':         initial_hostname,
-                'hw_config':        hw_config,
-                'wifi_ssid':        '',
-                'wifi_pw':          '',
-                'ap_pw':            'myobiPassword',
-                'tz_offset':        3600,
-                'mqtt_enable':      True,
-                'mqtt_keepalive':   0,
-                'mqtt_cid':         unique_machine_id,
-                'mqtt_server':      'iot.eclipse.org',
-                'mqtt_user':        '',
-                'mqtt_pw':          '',
-                'mqtt_subt':        initial_hostname + '/' + 'switch/action',
-                'mqtt_pubt':        initial_hostname + '/' + 'switch/status'
-}
+
+# using a list to store config information (dicts take too much memory)
+
+# list indeces/keys:
+
+keys = ['hostname',
+        'wifi_ssid',
+        'wifi_pw',
+        'hw_config',
+        'ap_pw',
+        'tz_offset',
+        'mqtt_enable',
+        'mqtt_kalive',
+        'mqtt_server',
+        'mqtt_user',
+        'mqtt_pw',
+        'mqtt_cid',
+        'mqtt_subt',
+        'mqtt_pubt'
+        ]
+
+initial_cfg = [
+                initial_hostname,                           # hostname
+                '',                                         # wifi_ssid
+                '',                                         # wifi_pw
+                hw_config,                                  # hw_config
+                'myobiPassword',                            # ap_pw
+                3600,                                       # tz_offset
+                True,                                       # mqtt_enable
+                0,                                          # mqtt_kalive
+                'iot.eclipse.org',                          # mqtt_server
+                '',                                         # mqtt_user
+                '',                                         # mqtt_pw
+                unique_machine_id,                          # mqtt_cid
+                initial_hostname + '/' + 'switch/action',   # mqtt_subt
+                initial_hostname + '/' + 'switch/status'    # mqtt_pubt
+]
+
+# cfg.idx(key) is a bit more readable than cfg.keys.index(key)
+def idx(key):
+    global keys
+    # return the index of the key string
+    return keys.index(key)
 
 # ----------------------------------------------------------------------------

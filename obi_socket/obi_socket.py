@@ -70,7 +70,7 @@ def index(req, resp):
         # GET
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
-        yield from resp.awrite("<center><h1>Hi, this is {}</h1><hr />".format(conf['hostname']))
+        yield from resp.awrite("<center><h1>Hi, this is {}</h1><hr />".format(conf[cfg.idx('hostname')]))
         yield from resp.awrite("Power is")
         if port_io.get_output(cfg.RELAY) == 1:
             yield from resp.awrite("<h2>ON</h2>")
@@ -93,7 +93,7 @@ def system(req, resp):
         status = port_io.get_ports_status()
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
-        yield from resp.awrite("<h1>{} - System Info</h1>".format(conf['hostname']))
+        yield from resp.awrite("<h1>{} - System Info</h1>".format(conf[cfg.idx('hostname')]))
         yield from resp.awrite("<p><table style=\"max-height:800px\"><thead><th>Item</th><th>conf</th></thead>")
         yield from resp.awrite("<tr><td>Network config</td><td><code>{}</code></td></tr>".format(wlan.ifconfig()))
         yield from resp.awrite("<tr><td>Firmware version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
@@ -143,13 +143,14 @@ def setup(req, resp):
     print("DEBUG: Before: ", gc.mem_free())
     method = req.method
     if method == "POST":
-        cfg_dict = {}
         yield from req.read_form_data()
         for k, v in req.form.items():
-            #print("INFO: DEBUG: {:<15} : {:<20}".format(k, v[0]))
-            cfg_dict[k] = v[0]
+            # update conf values
+            conf[cfg.idx(k)] = v[0]
+            print("INFO: DEBUG: {:<15} : {:<20}".format(k, v[0]))
+
         gc.collect()
-        obi_tools.save_cfg(cfg_dict)
+        obi_tools.save_cfg(conf)
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite("Saved config.<br />")
@@ -162,11 +163,28 @@ def setup(req, resp):
         yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite('</br><form id="wifi_config" method="post">')
         yield from resp.awrite('<div class="input-group vertical">')
-        for k, v in sorted(conf.items()):
-            if k == 'wifi_pw':
-                yield from resp.awrite('{}: <input name="{}" type="password" value="{}"><br />'.format(k, k, v))
+        k = 0
+        for v in conf[0:5]:
+            if cfg.keys[k] == 'wifi_pw':
+                yield from resp.awrite('{0}: <input name="{0}" type="password" value="{1}"><br />'.format(cfg.keys[k], v))
             else:
-                yield from resp.awrite('{}: <input name="{}" value="{}"><br />'.format(k, k, v))
+                yield from resp.awrite('{0}: <input name="{0}" value="{1}"><br />'.format(cfg.keys[k], v))
+            k += 1
+        yield from resp.awrite('<button type="submit" value="Save">Save</button><br />')
+        yield from resp.awrite("</div></form>")
+
+        yield from resp.awrite('</br><form id="mqtt_config" method="post">')
+        yield from resp.awrite('<div class="input-group vertical">')
+        k = 6
+        for v in conf[k:]:
+            yield from resp.awrite('{0}: <input name="{0}" value="{1}"><br />'.format(cfg.keys[k], v))
+            k += 1
+        yield from resp.awrite('<button type="submit" value="Save">Save</button><br />')
+        yield from resp.awrite("</div></form>")
+
+
+
+
         '''
         # hw_config drop down list
         yield from resp.awrite('{0}: <select name="{0}">'.format('hw_config'))
@@ -174,7 +192,6 @@ def setup(req, resp):
             yield from resp.awrite('<option value="{0}">{0}</option>'.format(k))
         yield from resp.awrite('</select>')
         '''
-        yield from resp.awrite('<button type="submit" value="Save">Save</button><br />')
         yield from resp.awrite("</div></form></body></html>")
     gc.collect()
     print("DEBUG: After:  ", gc.mem_free())
