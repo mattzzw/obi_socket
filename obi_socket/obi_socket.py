@@ -140,7 +140,7 @@ def download_cfg(req, resp):
 @app.route('/setup')
 def setup(req, resp):
     gc.collect()
-    print("DEBUG: Before: ", gc.mem_free())
+    print("DEBUG: Before setup: ", gc.mem_free())
     method = req.method
     if method == "POST":
         yield from req.read_form_data()
@@ -154,35 +154,24 @@ def setup(req, resp):
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
         yield from resp.awrite("Saved config.<br />")
-        yield from resp.awrite('<form action="/restart" method="post"> \
+        yield from resp.awrite('<form action="/restart" method="post" > \
                                <button name="Restart">Restart to apply changes</button></form>')
 
     else:
         # GET - show form
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
-        yield from resp.awrite('</br><form id="wifi_config" method="post">')
-        yield from resp.awrite('<div class="input-group vertical">')
         k = 0
-        for v in conf[0:5]:
+        for v in conf:
+            yield from resp.awrite('</br><form id="wifi_config" method="post">')
+            yield from resp.awrite('<div class="input-group fluid">')
             if cfg.keys[k] == 'wifi_pw':
-                yield from resp.awrite('{0}: <input name="{0}" type="password" value="{1}"><br />'.format(cfg.keys[k], v))
+                yield from resp.awrite('{0}: <input name="{0}" type="password" value="{1}">'.format(cfg.keys[k], v))
             else:
-                yield from resp.awrite('{0}: <input name="{0}" value="{1}"><br />'.format(cfg.keys[k], v))
+                yield from resp.awrite('{0}: <input name="{0}" value="{1}">'.format(cfg.keys[k], v))
             k += 1
-        yield from resp.awrite('<button type="submit" value="Save">Save</button><br />')
-        yield from resp.awrite("</div></form>")
-
-        yield from resp.awrite('</br><form id="mqtt_config" method="post">')
-        yield from resp.awrite('<div class="input-group vertical">')
-        k = 6
-        for v in conf[k:]:
-            yield from resp.awrite('{0}: <input name="{0}" value="{1}"><br />'.format(cfg.keys[k], v))
-            k += 1
-        yield from resp.awrite('<button type="submit" value="Save">Save</button><br />')
-        yield from resp.awrite("</div></form>")
-
-
+            yield from resp.awrite('<button type="submit" value="Save">Save</button>')
+            yield from resp.awrite("</div></form>")
 
 
         '''
@@ -194,4 +183,4 @@ def setup(req, resp):
         '''
         yield from resp.awrite("</div></form></body></html>")
     gc.collect()
-    print("DEBUG: After:  ", gc.mem_free())
+    print("DEBUG: After setup:  ", gc.mem_free())
