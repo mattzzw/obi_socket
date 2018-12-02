@@ -47,6 +47,7 @@ def do_connect(config):
         print('INFO: Network config:', wlan.ifconfig())
         wifi_is_connected = True
     else:
+        port_io.blink_slowly()
         wifi_is_connected = False
 
     return wifi_is_connected
