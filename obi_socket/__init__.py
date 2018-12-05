@@ -16,8 +16,8 @@ obi_wifi.start_accesspoint(obi_socket.conf)
 # Connect to the world...
 wifi_is_connected = obi_wifi.do_connect(obi_socket.conf)
 if wifi_is_connected:
-    client = obi_mqtt.init_client(obi_socket.conf)
-    obi_mqtt.do_connect(client, obi_socket.conf)
+    obi_mqtt.init_client(obi_socket.conf)
+    obi_mqtt.do_connect(obi_mqtt.mqtt_client, obi_socket.conf)
     obi_time.set_rtc_from_ntp(obi_socket.conf)
 else:
     client = None

@@ -35,7 +35,7 @@ def switch(req, resp):
                 elif val[0] == 'off':
                     port_io.set_output(cfg.RELAY, 0)
                     port_io.set_output(cfg.LED_R, 0)
-                obi_mqtt.publish_status(client, conf, val[0])
+                obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, val[0])
 
     # redirect to "/"
     headers = {"Location": "/"}
@@ -49,12 +49,12 @@ def toggle(req, resp):
             print("INFO: toggling power for {} seconds".format(val[0]))
             port_io.toggle_output(cfg.RELAY)
             port_io.toggle_output(cfg.LED_R)
-            obi_mqtt.publish_status(client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
+            obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
             if float(val[0]) > 0:
                 utime.sleep(float(val))
                 port_io.toggle_output(cfg.RELAY)
                 port_io.toggle_output(cfg.LED_R)
-                obi_mqtt.publish_status(client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
+                obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
     # redirect to "/"
     headers = {"Location": "/"}
     yield from picoweb.start_response(resp, status="303", headers=headers)

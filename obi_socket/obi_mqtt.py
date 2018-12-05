@@ -1,17 +1,18 @@
 from umqtt.robust import MQTTClient
 import machine
-import ujson
 from . import config as cfg
 from . import port_io
 
 mqtt_con_status = 'Not connected'
+mqtt_client = None
 
 def init_client(config):
-    client = MQTTClient(config['mqtt_cid'], config['mqtt_server'],
+    global mqtt_client
+    mqtt_client = MQTTClient(config['mqtt_cid'], config['mqtt_server'],
                    user = config['mqtt_user'],
                password = config['mqtt_pw'],
                keepalive = int(config['mqtt_keepalive']))
-    return client
+    return mqtt_client
 
 def do_connect(client, config):
     # Setup MQTT connection
