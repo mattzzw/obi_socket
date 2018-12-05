@@ -35,7 +35,7 @@ def do_connect(config):
         # no client config found
         print("INFO: No wifi client config found.")
         wlan.active(False)
-        #port_io.blink_slowly()
+        port_io.blink_slowly()
 
     # timeout or connected?
     if wlan.isconnected():
@@ -47,6 +47,7 @@ def do_connect(config):
         print('INFO: Network config:', wlan.ifconfig())
         wifi_is_connected = True
     else:
+        # FIXME: if enabled this can lead to a boot loop (timer/mqtt clash?)
         #port_io.blink_slowly()
         wifi_is_connected = False
 

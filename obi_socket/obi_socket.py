@@ -161,18 +161,39 @@ def setup(req, resp):
         # GET - show form
         yield from picoweb.start_response(resp)
         yield from resp.awrite(obi_html.html_header)
+        yield from resp.awrite('</br><form id="wifi_config" method="post">')
+        yield from resp.awrite('<fieldset><legend>Wifi Config</legend>')
+        yield from resp.awrite('<div class="input-group vertical">')
         k = 0
-        for v in conf:
-            yield from resp.awrite('</br><form id="wifi_config" method="post">')
-            yield from resp.awrite('<div class="input-group fluid">')
+        for v in conf[0:3]:
             if cfg.keys[k] == 'wifi_pw':
                 yield from resp.awrite('{0}: <input name="{0}" type="password" value="{1}">'.format(cfg.keys[k], v))
             else:
                 yield from resp.awrite('{0}: <input name="{0}" value="{1}">'.format(cfg.keys[k], v))
             k += 1
-            yield from resp.awrite('<button type="submit" value="Save">Save</button>')
-            yield from resp.awrite("</div></form>")
+        yield from resp.awrite('<button type="submit" value="Save">Save</button>')
+        yield from resp.awrite("</div></fieldset></form>")
 
+
+        yield from resp.awrite('</br><form id="mqtt_config" method="post">')
+        yield from resp.awrite('<fieldset><legend>System Config</legend>')
+        yield from resp.awrite('<div class="input-group vertical">')
+        k = 3
+        for v in conf[3:6]:
+            yield from resp.awrite('{0}: <input name="{0}" value="{1}">'.format(cfg.keys[k], v))
+            k += 1
+        yield from resp.awrite('<button type="submit" value="Save">Save</button>')
+        yield from resp.awrite("</div></fieldset></form>")
+
+        yield from resp.awrite('</br><form id="mqtt_config" method="post">')
+        yield from resp.awrite('<fieldset><legend>MQTT Config</legend>')
+        yield from resp.awrite('<div class="input-group vertical">')
+        k = 6
+        for v in conf[6:]:
+            yield from resp.awrite('{0}: <input name="{0}" value="{1}">'.format(cfg.keys[k], v))
+            k += 1
+        yield from resp.awrite('<button type="submit" value="Save">Save</button>')
+        yield from resp.awrite("</div></fieldset></form>")
 
         '''
         # hw_config drop down list

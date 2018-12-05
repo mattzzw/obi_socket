@@ -79,9 +79,9 @@ initial_cfg = [
                 '',                                         # wifi_pw
                 hw_config,                                  # hw_config
                 'myobiPassword',                            # ap_pw
-                3600,                                       # tz_offset
-                True,                                       # mqtt_enable
-                0,                                          # mqtt_kalive
+                '3600',                                     # tz_offset
+                'True',                                        # mqtt_enable
+                '0',                                        # mqtt_kalive
                 'iot.eclipse.org',                          # mqtt_server
                 '',                                         # mqtt_user
                 '',                                         # mqtt_pw
