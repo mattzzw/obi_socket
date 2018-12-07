@@ -8,7 +8,7 @@ def do_connect(config):
     wlan = network.WLAN(network.STA_IF)
 
     # wifi configured?
-    if config['wifi_ssid'] != '':
+    if config[cfg.idx('wifi_ssid')] != '':
         wifi_cfg_exists = True
     else:
         wifi_cfg_exists = False
@@ -16,10 +16,10 @@ def do_connect(config):
     if wifi_cfg_exists == True:
         wlan.active(True)
         if not wlan.isconnected():
-            print("INFO: Setting client hostname to {}".format(config['hostname']))
-            wlan.config(dhcp_hostname=config['hostname'])
+            print("INFO: Setting client hostname to {}".format(config[cfg.idx('hostname')]))
+            wlan.config(dhcp_hostname=config[cfg.idx('hostname')])
             print('INFO: Connecting to network...')
-            wlan.connect(config['wifi_ssid'], config['wifi_pw'])
+            wlan.connect(config[cfg.idx('wifi_ssid')], config[cfg.idx('wifi_pw')])
             tmo = 0
             while not wlan.isconnected():
                 # try to connect and flash green LED
@@ -55,10 +55,11 @@ def start_accesspoint(conf):
     print("INFO: --- Setting up AP ---")
     ap_if = network.WLAN(network.AP_IF)
     ap_if.active(True)
-    print("INFO: Setting AP name to {}".format(conf['hostname']))
-    print("INFO: Seeting Pw to {}".format(conf['ap_pw']))
+    print("INFO: Setting AP name to {}".format(conf[cfg.idx('hostname')]))
+    print("INFO: Seeting Pw to {}".format(conf[cfg.idx('ap_pw')]))
     try:
-        ap_if.config(essid=conf['hostname'], authmode=network.AUTH_WPA_WPA2_PSK, \
-                     password=conf['ap_pw'])
+        ap_if.config(essid=conf[cfg.idx('hostname')],
+                     authmode=network.AUTH_WPA_WPA2_PSK, \
+                     password=conf[cfg.idx('ap_pw')])
     except OSError:
         print("ERROR: Setting up AP failed.")

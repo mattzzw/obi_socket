@@ -8,30 +8,31 @@ mqtt_client = None
 
 def init_client(config):
     global mqtt_client
-    mqtt_client = MQTTClient(config['mqtt_cid'], config['mqtt_server'],
-                   user = config['mqtt_user'],
-               password = config['mqtt_pw'],
-               keepalive = int(config['mqtt_keepalive']))
+    mqtt_client = MQTTClient(config[cfg.idx('mqtt_cid')],
+                        config[cfg.idx('mqtt_server')],
+                   user = config[cfg.idx('mqtt_user')],
+               password = config[cfg.idx('mqtt_pw')],
+               keepalive = int(config[cfg.idx('mqtt_kalive')]))
     return mqtt_client
 
 def do_connect(client, config):
     # Setup MQTT connection
     global mqtt_con_status
-    if config['mqtt_enable'] == 'True':
+    if config[cfg.idx('mqtt_enable')] == 'True':
         client.set_callback(sub_cb)
         try:
             rc = client.connect()
         except Exception as e:
-            print("ERROR: MQTT: Connection to {} failed: {}.".format(config['mqtt_server'], e))
+            print("ERROR: MQTT: Connection to {} failed: {}.".format(config[cfg.idx('mqtt_server')], e))
             mqtt_con_status = e
         else:
-            client.subscribe(config['mqtt_subt'])
+            client.subscribe(config[cfg.idx('mqtt_subt')])
             # setup timer to check for messages every 200ms
             tim = machine.Timer(-1)
             tim.init(period = 200, mode = machine.Timer.PERIODIC,
                      callback = lambda t:client.check_msg())
             print("INFO: MQTT: Connected as client {} to {}, subscribed to topic {}".format(
-                config['mqtt_cid'], config['mqtt_server'], config['mqtt_subt']))
+                config[cfg.idx('mqtt_cid')], config[cfg.idx('mqtt_server')], config[cfg.idx('mqtt_subt')]))
             mqtt_con_status='Success'
     else:
         print("INFO: MQTT: Not enabled, not starting.")
@@ -52,6 +53,6 @@ def sub_cb(topic, msg):
     # Can't config/client parameters
 
 def publish_status(client, config, msg):
-    if config['mqtt_enable'] == 'True':
-        client.publish(config['mqtt_pubt'], msg)
-        print("INFO: MQTT: Published data to {}: {}".format(config['mqtt_pubt'], msg))
+    if config[cfg.idx('mqtt_enable')] == 'True':
+        client.publish(config[cfg.idx('mqtt_pubt')], msg)
+        print("INFO: MQTT: Published data to {}: {}".format(config[cfg.idx('mqtt_pubt')], msg))

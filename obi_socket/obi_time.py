@@ -7,7 +7,7 @@ rtc = machine.RTC()
 
 def set_rtc_from_ntp(config):
     try:
-        mytime = utime.localtime(ntptime.time() + int(config['tz_offset']))
+        mytime = utime.localtime(ntptime.time() + int(config[cfg.idx('tz_offset')]))
     except:
         mytime = utime.localtime()
     year, month, day, hour, minute, second, weekday, yearday = mytime
