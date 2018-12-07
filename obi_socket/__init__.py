@@ -7,7 +7,6 @@ from . import obi_time
 
 
 # init main app
-print("INFO: Setting up I/O ports:")
 port_io.setup_ports()
 
 # start access-point

@@ -22,7 +22,6 @@ class Button:
             self.call_callback(pin)
 
 def button_on_off_callback(pin):
-    print("INFO: Button (%s) changed to: %r" % (pin, pin.value()))
     # toggle relay on releasing the button
     if pin.value():
         toggle_output(cfg.RELAY)
@@ -75,7 +74,6 @@ def get_ports_status():
 def setup_ports():
     # set output ports
     for port, pcfg in cfg.outputs.items():
-        print("INFO: Setting up GPIO OUTPUT pin {}".format(pcfg['pin']))
         if pcfg['active'] == 'high':
             # init high active ports with 0
             pcfg['obj'] = Pin(pcfg['pin'], Pin.OUT, value=0)
@@ -85,7 +83,6 @@ def setup_ports():
 
     # setup input ports
     for port, pcfg in cfg.inputs.items():
-        print("INFO: Setting up GPIO INPUT pin {}".format(pcfg['pin']))
         if pcfg['pullup'] == 'True':
             pcfg['obj'] = Pin(pcfg['pin'], Pin.IN, Pin.PULL_UP)
         else:

@@ -12,5 +12,3 @@ def set_rtc_from_ntp(config):
         mytime = utime.localtime()
     year, month, day, hour, minute, second, weekday, yearday = mytime
     rtc.datetime((year, month, day, weekday, hour, minute, second, 0))
-    print("INFO: Set RTC to {}-{}-{} {:02}:{:02}:{:02}"
-          .format(year, month, day, hour, minute, second))

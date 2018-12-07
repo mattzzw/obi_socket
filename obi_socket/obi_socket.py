@@ -28,7 +28,6 @@ def switch(req, resp):
     for key, val in req.form.items():
         if key == 'pwr':
             if val[0] in ('on', 'off'):
-                print("INFO: switching power to {}".format(val[0]))
                 if val[0] == 'on':
                     port_io.set_output(cfg.RELAY, 1)
                     port_io.set_output(cfg.LED_R, 1)
@@ -46,7 +45,6 @@ def toggle(req, resp):
     req.parse_qs()
     for key, val in req.form.items():
         if key == 'duration':
-            print("INFO: toggling power for {} seconds".format(val[0]))
             port_io.toggle_output(cfg.RELAY)
             port_io.toggle_output(cfg.LED_R)
             obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
@@ -62,7 +60,6 @@ def toggle(req, resp):
 @app.route("/")
 def index(req, resp):
     gc.collect()
-    print(gc.mem_free())
     method = req.method
     if method == "POST":
         pass
@@ -79,7 +76,7 @@ def index(req, resp):
         yield from resp.awrite(obi_html.html_action)
         yield from resp.awrite("</div></div></div></body></html>")
         gc.collect()
-        print(gc.mem_free())
+
 
 @app.route('/info')
 def system(req, resp):
@@ -140,14 +137,12 @@ def download_cfg(req, resp):
 @app.route('/setup')
 def setup(req, resp):
     gc.collect()
-    print("DEBUG: Before setup: ", gc.mem_free())
     method = req.method
     if method == "POST":
         yield from req.read_form_data()
         for k, v in req.form.items():
             # update conf values
             conf[cfg.idx(k)] = v[0]
-            print("INFO: DEBUG: {:<15} : {:<20}".format(k, v[0]))
 
         gc.collect()
         obi_tools.save_cfg(conf)
@@ -173,7 +168,6 @@ def setup(req, resp):
             k += 1
         yield from resp.awrite('<button type="submit" value="Save">Save</button>')
         yield from resp.awrite("</div></fieldset></form>")
-
 
         yield from resp.awrite('</br><form id="mqtt_config" method="post">')
         yield from resp.awrite('<fieldset><legend>System Config</legend>')
@@ -204,4 +198,3 @@ def setup(req, resp):
         '''
         yield from resp.awrite("</div></form></body></html>")
     gc.collect()
-    print("DEBUG: After setup:  ", gc.mem_free())

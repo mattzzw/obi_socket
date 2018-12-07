@@ -23,7 +23,6 @@ def do_connect(client, config):
         try:
             rc = client.connect()
         except Exception as e:
-            print("ERROR: MQTT: Connection to {} failed: {}.".format(config[cfg.idx('mqtt_server')], e))
             mqtt_con_status = e
         else:
             client.subscribe(config[cfg.idx('mqtt_subt')])
@@ -31,15 +30,10 @@ def do_connect(client, config):
             tim = machine.Timer(-1)
             tim.init(period = 200, mode = machine.Timer.PERIODIC,
                      callback = lambda t:client.check_msg())
-            print("INFO: MQTT: Connected as client {} to {}, subscribed to topic {}".format(
-                config[cfg.idx('mqtt_cid')], config[cfg.idx('mqtt_server')], config[cfg.idx('mqtt_subt')]))
             mqtt_con_status='Success'
-    else:
-        print("INFO: MQTT: Not enabled, not starting.")
 
 # MQTT callback
 def sub_cb(topic, msg):
-    print("INFO: MQTT: Received data: {}".format((topic, msg)))
     if msg == b"on":
         port_io.set_output(cfg.RELAY, 1)
         port_io.set_output(cfg.LED_R, 1)
@@ -55,4 +49,3 @@ def sub_cb(topic, msg):
 def publish_status(client, config, msg):
     if config[cfg.idx('mqtt_enable')] == 'True':
         client.publish(config[cfg.idx('mqtt_pubt')], msg)
-        print("INFO: MQTT: Published data to {}: {}".format(config[cfg.idx('mqtt_pubt')], msg))
