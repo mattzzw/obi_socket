@@ -28,11 +28,15 @@ def button_on_off_callback(pin):
         toggle_output(cfg.RELAY)
         # set LED according to output
         set_output(cfg.LED_R, get_output(cfg.RELAY))
+
+        # FIXME: This crashes the ESP because irq handlers must not allocate memory!
+        '''
         # publish mqtt status
         if (get_output(cfg.RELAY)):
             obi_mqtt.publish_status(obi_mqtt.mqtt_client, obi_tools.load_cfg(), 'on')
         else:
             obi_mqtt.publish_status(obi_mqtt.mqtt_client, obi_tools.load_cfg(), 'off')
+        '''
     else:
         # check for long_press
         pr_time = utime.ticks_ms()
