@@ -38,13 +38,13 @@ def sub_cb(topic, msg):
     global mqtt_client
     if msg == b"on":
         port_io.set_output(cfg.RELAY, 1)
-        port_io.set_output(cfg.LED_R, 1)
+
     elif msg == b"off":
         port_io.set_output(cfg.RELAY, 0)
-        port_io.set_output(cfg.LED_R, 0)
     elif msg == b"toggle":
         port_io.toggle_output(cfg.RELAY)
-        port_io.toggle_output(cfg.LED_R)
+    # set LED accordingly
+    port_io.set_output(cfg.LED_R, port_io.get_output(cfg.RELAY))
 
     # publish mqtt status
     # (Loading cfg again because I don't know how to pass

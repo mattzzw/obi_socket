@@ -30,10 +30,9 @@ def switch(req, resp):
             if val[0] in ('on', 'off'):
                 if val[0] == 'on':
                     port_io.set_output(cfg.RELAY, 1)
-                    port_io.set_output(cfg.LED_R, port_io.get_output(cfg.RELAY))
                 elif val[0] == 'off':
                     port_io.set_output(cfg.RELAY, 0)
-                    port_io.set_output(cfg.LED_R, port_io.get_output(cfg.RELAY))
+                port_io.set_output(cfg.LED_R, port_io.get_output(cfg.RELAY))
                 obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, val[0])
 
     # redirect to "/"
@@ -48,7 +47,7 @@ def toggle(req, resp):
         if key == 'duration':
             # toggle relay
             port_io.toggle_output(cfg.RELAY)
-            # set led accordingly
+            # set LED accordingly
             port_io.set_output(cfg.LED_R, port_io.get_output(cfg.RELAY))
             obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
             # If we have a duration > 0 sleep and toggle again

@@ -27,8 +27,7 @@ def button_on_off_callback(pin):
     if pin.value():
         toggle_output(cfg.RELAY)
         # set LED according to output
-        s = get_output(cfg.RELAY)
-        set_output(cfg.LED_R, s)
+        set_output(cfg.LED_R, get_output(cfg.RELAY))
         # publish mqtt get_status
         if (s):
             obi_mqtt.publish_status(obi_mqtt.mqtt_client, obi_tools.load_cfg(), 'on')
