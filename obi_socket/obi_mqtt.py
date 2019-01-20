@@ -2,6 +2,7 @@ from umqtt.robust import MQTTClient
 import machine
 from . import config as cfg
 from . import port_io
+from . import obi_tools
 
 mqtt_con_status = 'Not connected'
 mqtt_client = None
@@ -32,8 +33,9 @@ def do_connect(client, config):
                      callback = lambda t:client.check_msg())
             mqtt_con_status='Success'
 
-# MQTT callback
+# MQTT subscription callback handler
 def sub_cb(topic, msg):
+    global mqtt_client
     if msg == b"on":
         port_io.set_output(cfg.RELAY, 1)
         port_io.set_output(cfg.LED_R, 1)
@@ -43,8 +45,11 @@ def sub_cb(topic, msg):
     elif msg == b"toggle":
         port_io.toggle_output(cfg.RELAY)
         port_io.toggle_output(cfg.LED_R)
-    # FIXME how to publish mqtt status in callback routing?
-    # Can't config/client parameters
+
+    # publish mqtt status
+    # (Loading cfg again because I don't know how to pass
+    # the config object in obi_socket.py to callback)
+    publish_status(mqtt_client, obi_tools.load_cfg(), msg)
 
 def publish_status(client, config, msg):
     if config[cfg.idx('mqtt_enable')] == 'True':
