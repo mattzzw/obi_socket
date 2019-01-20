@@ -41,6 +41,7 @@ def do_connect(config):
         ap_if.active(False)
         port_io.set_output(cfg.LED_G, 1)
         wifi_is_connected = True
+        print("wifi: ", wlan.ifconfig())
     else:
         wifi_is_connected = False
 
