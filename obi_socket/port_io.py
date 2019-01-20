@@ -2,6 +2,7 @@ from machine import Pin, Timer
 import utime
 from . import obi_tools
 from . import config as cfg
+from . import obi_mqtt
 
 class Button:
     """
@@ -25,8 +26,14 @@ def button_on_off_callback(pin):
     # toggle relay on releasing the button
     if pin.value():
         toggle_output(cfg.RELAY)
+        # set LED according to output
         s = get_output(cfg.RELAY)
         set_output(cfg.LED_R, s)
+        # publish mqtt get_status
+        if (s):
+            obi_mqtt.publish_status(obi_mqtt.mqtt_client, obi_tools.load_cfg(), 'on')
+        else:
+            obi_mqtt.publish_status(obi_mqtt.mqtt_client, obi_tools.load_cfg(), 'off')
     else:
         # check for long_press
         pr_time = utime.ticks_ms()
