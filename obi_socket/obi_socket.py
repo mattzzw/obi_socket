@@ -30,10 +30,10 @@ def switch(req, resp):
             if val[0] in ('on', 'off'):
                 if val[0] == 'on':
                     port_io.set_output(cfg.RELAY, 1)
-                    port_io.set_output(cfg.LED_R, 1)
+                    port_io.set_output(cfg.LED_R, port_io.get_output(cfg.RELAY))
                 elif val[0] == 'off':
                     port_io.set_output(cfg.RELAY, 0)
-                    port_io.set_output(cfg.LED_R, 0)
+                    port_io.set_output(cfg.LED_R, port_io.get_output(cfg.RELAY))
                 obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, val[0])
 
     # redirect to "/"
@@ -42,16 +42,21 @@ def switch(req, resp):
 
 @app.route('/toggle')
 def toggle(req, resp):
+    gc.collect()
     req.parse_qs()
     for key, val in req.form.items():
         if key == 'duration':
+            # toggle relay
             port_io.toggle_output(cfg.RELAY)
-            port_io.toggle_output(cfg.LED_R)
+            # set led accordingly
+            port_io.set_output(cfg.LED_R, port_io.get_output(cfg.RELAY))
             obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
+            # If we have a duration > 0 sleep and toggle again
             if float(val[0]) > 0:
-                utime.sleep(float(val)) # FIXME: use uasyncio for non blocking delay
+                utime.sleep(float(val[0])) # FIXME: use uasyncio for non blocking delay
+                #await asyncio.sleep(float(val[0]))
                 port_io.toggle_output(cfg.RELAY)
-                port_io.toggle_output(cfg.LED_R)
+                port_io.set_output(cfg.LED_R, port_io.get_output(cfg.RELAY))
                 obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
     # redirect to "/"
     headers = {"Location": "/"}
