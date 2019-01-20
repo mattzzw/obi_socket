@@ -49,7 +49,7 @@ def toggle(req, resp):
             port_io.toggle_output(cfg.LED_R)
             obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
             if float(val[0]) > 0:
-                utime.sleep(float(val))
+                utime.sleep(float(val)) # FIXME: use uasyncio for non blocking delay
                 port_io.toggle_output(cfg.RELAY)
                 port_io.toggle_output(cfg.LED_R)
                 obi_mqtt.publish_status(obi_mqtt.mqtt_client, conf, 'on' if port_io.get_output(cfg.RELAY) else 'off')
@@ -93,12 +93,15 @@ def system(req, resp):
         yield from resp.awrite("<h1>{} - System Info</h1>".format(conf[cfg.idx('hostname')]))
         yield from resp.awrite("<p><table style=\"max-height:800px\"><thead><th>Item</th><th>conf</th></thead>")
         yield from resp.awrite("<tr><td>Network config</td><td><code>{}</code></td></tr>".format(wlan.ifconfig()))
-        yield from resp.awrite("<tr><td>Firmware version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
+        yield from resp.awrite("<tr><td>Micropython version</td><td><code>{}</code></td></tr>".format(uos.uname()[3]))
         yield from resp.awrite("<tr><td>Bytes free</td><td><code>{}</code></td></tr>".format(gc.mem_free()))
         yield from resp.awrite("<tr><td>Initial MQTT connection status</td><td><code>{}</code></td></tr>".format(obi_mqtt.mqtt_con_status))
         yield from resp.awrite("<tr><td>Port status</td><td><code>{}</code></td></tr>".format(ujson.dumps(status)))
-        (year, month, day, weekday, hours, minutes, seconds, subseconds) = obi_time.rtc.datetime()
+        now = obi_time.rtc.datetime()
+        (year, month, day, weekday, hours, minutes, seconds, subseconds) = now
         yield from resp.awrite("<tr><td>Time</td><td><code>{}-{}-{} {:02}:{:02}:{:02}</code></td></tr>".format(year, month, day, hours, minutes, seconds))
+        year, month, day, hours, minutes, seconds, weekday, yearday = obi_time.boot_time
+        yield from resp.awrite("<tr><td>Boot time</td><td><code>{}-{}-{} {:02}:{:02}:{:02}</code></td></tr>".format(year, month, day, hours, minutes, seconds))
         yield from resp.awrite("</table><p>")
         yield from resp.awrite('<form action="/restart" method="post"><button name="restart" value="restart">Restart</button></form>')
         yield from resp.awrite('<form action="/reset" method="post"><button name="reset" value="reset">Reset defaults</button></form>')
