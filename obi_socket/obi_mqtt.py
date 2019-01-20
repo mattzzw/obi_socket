@@ -27,9 +27,9 @@ def do_connect(client, config):
             mqtt_con_status = e
         else:
             client.subscribe(config[cfg.idx('mqtt_subt')])
-            # setup timer to check for messages every 200ms
+            # setup timer to check for messages every 500ms
             tim = machine.Timer(-1)
-            tim.init(period = 200, mode = machine.Timer.PERIODIC,
+            tim.init(period = 500, mode = machine.Timer.PERIODIC,
                      callback = lambda t:client.check_msg())
             mqtt_con_status='Success'
 
