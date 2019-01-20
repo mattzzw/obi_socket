@@ -17,6 +17,8 @@ wifi_is_connected = obi_wifi.do_connect(obi_socket.conf)
 if wifi_is_connected:
     obi_mqtt.init_client(obi_socket.conf)
     obi_mqtt.do_connect(obi_mqtt.mqtt_client, obi_socket.conf)
+    # reset mqtt status
+    obi_mqtt.publish_status(obi_mqtt.mqtt_client, obi_socket.conf, 'off')
     obi_time.set_rtc_from_ntp(obi_socket.conf)
 else:
     client = None
